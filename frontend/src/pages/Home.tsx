@@ -122,20 +122,20 @@ export const Home = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           
           {/* Hero Feature: AI Interest Matching */}
-          <div className="hero-feature md:col-span-2 glass rounded-[40px] border-primary/20 overflow-hidden group relative min-h-[380px] p-12">
-            <div className="relative z-10 h-full flex flex-col md:flex-row items-center gap-12">
-              <div className="flex-1 space-y-6">
-                <div className="h-14 w-14 rounded-2xl bg-primary/20 backdrop-blur-xl flex items-center justify-center text-primary group-hover:rotate-12 transition-transform">
-                  <Target className="h-7 w-7" />
+          <div className="hero-feature md:col-span-2 glass rounded-[40px] border-primary/20 overflow-hidden group relative min-h-[300px] p-10">
+            <div className="relative z-10 h-full flex flex-col md:flex-row items-center gap-10">
+              <div className="flex-1 space-y-4">
+                <div className="h-12 w-12 rounded-2xl bg-primary/20 backdrop-blur-xl flex items-center justify-center text-primary group-hover:rotate-12 transition-transform">
+                  <Target className="h-6 w-6" />
                 </div>
-                <h3 className="text-4xl md:text-5xl font-black tracking-tighter mb-4">Precision <br /> Interest Matching</h3>
-                <p className="text-lg text-muted-foreground font-medium max-w-sm">
-                  Our engine predicts events you'll love with <span className="text-primary font-black">98% accuracy</span> using local AI.
+                <h3 className="text-3xl md:text-4xl font-black tracking-tighter mb-2">Precision <br /> Interest Matching</h3>
+                <p className="text-base text-muted-foreground font-medium max-w-sm">
+                  Predicting events you'll love with <span className="text-primary font-black">98% accuracy</span>.
                 </p>
               </div>
 
               {/* Live Match Meter Mockup */}
-              <div className="relative w-48 h-48 flex items-center justify-center">
+              <div className="relative w-40 h-40 flex items-center justify-center">
                 <div className="absolute inset-0 rounded-full border-4 border-primary/10" />
                 <motion.div 
                   className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent"
@@ -143,8 +143,8 @@ export const Home = () => {
                   transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
                 />
                 <div className="text-center">
-                  <span className="text-4xl font-black text-primary">98%</span>
-                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Match Rate</p>
+                  <span className="text-3xl font-black text-primary">98%</span>
+                  <p className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Match Rate</p>
                 </div>
               </div>
             </div>
@@ -215,8 +215,6 @@ export const Home = () => {
         </div>
       </section>
 
-        </div>
-      </section>
 
       {/* Visionary Quote Section */}
       <section ref={visionRef} className="mx-auto mb-20 max-w-7xl px-8">
@@ -229,11 +227,11 @@ export const Home = () => {
           <div className="absolute -right-1.5 -top-1.5 h-4 w-4 bg-primary shadow-[0_0_15px_rgba(16,185,129,0.5)] z-20" />
           <div className="absolute -bottom-1.5 -right-1.5 h-4 w-4 bg-primary shadow-[0_0_15px_rgba(16,185,129,0.5)] z-20" />
 
-          <div className="relative z-20 mx-auto max-w-7xl py-16 md:p-20 text-center">
-            <p className="text-primary font-black uppercase tracking-[0.3em] mb-8 text-sm animate-pulse">
+          <div className="relative z-20 mx-auto max-w-7xl py-12 md:p-16 text-center">
+            <p className="text-primary font-black uppercase tracking-[0.3em] mb-6 text-xs animate-pulse">
               Our Philosophy
             </p>
-            <div className="text-4xl md:text-6xl lg:text-8xl tracking-tighter leading-none flex flex-col gap-2">
+            <div className="text-3xl md:text-5xl lg:text-7xl tracking-tighter leading-none flex flex-col gap-2">
               <div className="flex flex-wrap justify-center gap-x-4 md:gap-x-6 vision-line">
                 <p className="font-thin text-muted-foreground">Your</p>
                 <h2 className="font-black">interests</h2>
@@ -247,7 +245,7 @@ export const Home = () => {
                 <p className="font-thin text-muted-foreground">where they</p>
                 <h2 className="font-black">come</h2>
               </div>
-              <h2 className="font-black text-gradient text-6xl md:text-8xl lg:text-9xl vision-line">alive"</h2>
+              <h2 className="font-black text-gradient text-5xl md:text-7xl lg:text-8xl vision-line">alive"</h2>
             </div>
           </div>
         </div>
