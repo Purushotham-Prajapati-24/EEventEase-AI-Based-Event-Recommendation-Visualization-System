@@ -26,6 +26,7 @@ export const Home = () => {
         duration: 1.2,
         ease: "power4.out",
         delay: 0.2,
+        clearProps: "all",
       });
 
       gsap.from(".hero-feature", {
@@ -35,6 +36,7 @@ export const Home = () => {
         stagger: 0.2,
         ease: "power3.out",
         delay: 0.8,
+        clearProps: "all",
       });
 
       // Vision Reveal
@@ -85,12 +87,12 @@ export const Home = () => {
               <Sparkles className="h-4 w-4" /> AI-Powered Event Recommendations
             </div>
             
-            <h1 ref={titleRef} className="text-7xl md:text-9xl font-black tracking-tighter leading-tight">
+            <h1 ref={titleRef} className="text-7xl md:text-9xl font-black tracking-tighter leading-tight text-foreground">
               Discover the Future <br />
               with <span className="text-gradient">Event Ease</span>
             </h1>
             
-            <p className="text-xl md:text-2xl text-muted-foreground font-medium max-w-2xl mx-auto">
+            <p className="text-xl md:text-2xl text-muted-foreground font-medium max-w-2xl mx-auto hero-feature">
               The ultimate campus event ecosystem. Personalized for you, managed by AI, and designed for the next generation of students.
             </p>
 
