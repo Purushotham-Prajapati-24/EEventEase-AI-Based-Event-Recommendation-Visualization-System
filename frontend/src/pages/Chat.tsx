@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useLocation } from "react-router-dom";
 import type { RootState, AppDispatch } from "../store";
-import { fetchChats, fetchMessages, setActiveChat, addMessage, fetchChatById } from "../store/slices/chatSlice";
+import { fetchChats, fetchMessages, setActiveChat, addMessage, fetchChatById, updateMessageReadBy } from "../store/slices/chatSlice";
 import { Button } from "../components/ui/button";
 import { 
   Send, 
@@ -12,7 +12,8 @@ import {
   Paperclip, 
   Smile,
   ChevronLeft,
-  MessageSquare
+  MessageSquare,
+  Megaphone
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { io, Socket } from "socket.io-client";
@@ -69,7 +70,7 @@ const Chat = () => {
     
     socket.on("message-read", (data: { messageId: string, userId: string, readAt: Date }) => {
       // Find and update the specific message's readBy array in local state
-      dispatch({ type: 'chat/updateMessageReadBy', payload: data });
+      dispatch(updateMessageReadBy(data));
     });
 
     return () => {
@@ -149,7 +150,7 @@ const Chat = () => {
   };
 
   const getChatName = (chat: any) =>
-    chat.participants?.find((p: any) => p._id !== user?._id)?.name || chat.groupName || "Unknown";
+    chat.chatName || chat.participants?.find((p: any) => p._id !== user?._id)?.name || "Unknown";
 
   const formatTime = (dateStr: string) =>
     new Date(dateStr).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -269,24 +270,31 @@ const Chat = () => {
             </div>
 
             {/* Input Area */}
-            <div className="p-4 glass m-4 rounded-[32px] border-primary/10 flex items-center gap-4">
-              <Button variant="ghost" size="icon" className="rounded-xl"><Smile className="h-5 w-5" /></Button>
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                placeholder="Type a message..."
-                className="flex-1 bg-transparent border-none focus:outline-none text-sm"
-              />
-              <Button
-                onClick={handleSendMessage}
-                disabled={!newMessage.trim() || !socketConnected}
-                className="rounded-2xl h-12 w-12 p-0 flex items-center justify-center bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
-              >
-                <Send className="h-5 w-5" />
-              </Button>
-            </div>
+            {activeChat.isGroupChat && activeChat.groupName?.includes("Announcements") && activeChat.groupAdmin !== user?._id ? (
+              <div className="p-6 glass m-4 rounded-[32px] border-secondary/20 bg-secondary/5 flex items-center justify-center gap-3 text-secondary">
+                <Megaphone className="h-5 w-5 animate-pulse" />
+                <p className="text-sm font-black uppercase tracking-widest">Only organizers can post in this channel</p>
+              </div>
+            ) : (
+              <div className="p-4 glass m-4 rounded-[32px] border-primary/10 flex items-center gap-4">
+                <Button variant="ghost" size="icon" className="rounded-xl"><Smile className="h-5 w-5" /></Button>
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                  placeholder="Type a message..."
+                  className="flex-1 bg-transparent border-none focus:outline-none text-sm"
+                />
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!newMessage.trim() || !socketConnected}
+                  className="rounded-2xl h-12 w-12 p-0 flex items-center justify-center bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
+                >
+                  <Send className="h-5 w-5" />
+                </Button>
+              </div>
+            )}
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-12 space-y-6">

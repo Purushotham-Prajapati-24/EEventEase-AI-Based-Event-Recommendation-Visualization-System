@@ -37,6 +37,17 @@ export const initSocket = (httpServer: HttpServer) => {
       try {
         const { chatId, senderId, content } = data;
 
+        // Fetch chat to check permissions
+        const chat = await Chat.findById(chatId);
+        if (!chat) return;
+
+        // If it's an announcement chat, only the admin can post
+        if (chat.isGroupChat && chat.groupName?.includes("Announcements")) {
+          if (chat.groupAdmin?.toString() !== senderId) {
+            return socket.emit("error", { message: "Only organizers can post in the Announcements channel" });
+          }
+        }
+
         // Save to DB
         const newMessage = await Message.create({
           chat: chatId,

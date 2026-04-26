@@ -59,6 +59,17 @@ const chatSlice = createSlice({
         state.chats.unshift(action.payload);
       }
     },
+    updateMessageReadBy: (state, action) => {
+      const { messageId, userId, readAt } = action.payload;
+      const message = state.messages.find((m) => m._id === messageId);
+      if (message) {
+        if (!message.readBy) message.readBy = [];
+        const alreadyRead = message.readBy.some((r: any) => (r.user?._id || r.user) === userId);
+        if (!alreadyRead) {
+          message.readBy.push({ user: userId, readAt });
+        }
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -87,5 +98,5 @@ const chatSlice = createSlice({
   },
 });
 
-export const { setActiveChat, addMessage, updateMessageStatus, addChat } = chatSlice.actions;
+export const { setActiveChat, addMessage, updateMessageStatus, addChat, updateMessageReadBy } = chatSlice.actions;
 export default chatSlice.reducer;

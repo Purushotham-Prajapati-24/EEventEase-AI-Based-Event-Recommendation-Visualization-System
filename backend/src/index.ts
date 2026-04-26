@@ -29,7 +29,10 @@ initSocket(server);
 app.use(helmet());
 app.use(
   cors({
-    origin: ["http://localhost:5173"], // Add other origins if needed
+    origin: [
+      "http://localhost:5173",
+      process.env.FRONTEND_URL || "*"
+    ],
     credentials: true,
   })
 );
