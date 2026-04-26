@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { ImagePlus, X, Calendar, MapPin, Users as UsersIcon, FileText } from "lucide-react";
+import { ImagePlus, X, Calendar, MapPin, Users as UsersIcon, FileText, Link as LinkIcon, Upload } from "lucide-react";
 import api from "@/lib/api";
 import { uploadImage } from "@/lib/imagekit";
 
@@ -26,6 +26,8 @@ interface EventFormProps {
 
 export const EventForm = ({ onSuccess, onCancel }: EventFormProps) => {
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
+  const [bannerType, setBannerType] = useState<"upload" | "url">("upload");
+  const [bannerUrlInput, setBannerUrlInput] = useState("");
   const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<z.infer<typeof eventSchema>>({
@@ -47,7 +49,9 @@ export const EventForm = ({ onSuccess, onCancel }: EventFormProps) => {
     try {
       setIsSubmitting(true);
       setError(null);
-      await api.post("/events", { ...values, posterUrl });
+      // Use URL input directly if banner type is URL
+      const finalPosterUrl = bannerType === "url" ? bannerUrlInput || null : posterUrl;
+      await api.post("/events", { ...values, posterUrl: finalPosterUrl });
       onSuccess();
     } catch (err: any) {
       console.error("Failed to create event", err);
@@ -87,34 +91,66 @@ export const EventForm = ({ onSuccess, onCancel }: EventFormProps) => {
         <CardContent className="p-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Poster Upload Zone */}
-              <div className="group relative h-48 w-full rounded-2xl border-2 border-dashed border-primary/20 bg-primary/5 flex flex-col items-center justify-center overflow-hidden transition-all hover:border-primary/50">
-                {posterUrl ? (
-                  <>
-                    <img src={posterUrl} alt="Preview" className="h-full w-full object-cover" />
-                    <Button 
-                      type="button"
-                      variant="destructive" 
-                      size="icon" 
-                      className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-lg"
-                      onClick={() => setPosterUrl(null)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </>
+              {/* Banner Type Toggle */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 p-1 rounded-2xl bg-primary/5 border border-primary/10 w-fit">
+                  <button
+                    type="button"
+                    onClick={() => { setBannerType("upload"); setBannerUrlInput(""); }}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${bannerType === "upload" ? "bg-primary text-primary-foreground shadow-lg" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    <Upload className="h-3.5 w-3.5" /> Upload Image
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setBannerType("url"); setPosterUrl(null); }}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${bannerType === "url" ? "bg-primary text-primary-foreground shadow-lg" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    <LinkIcon className="h-3.5 w-3.5" /> Use URL
+                  </button>
+                </div>
+
+                {bannerType === "upload" ? (
+                  <div className="group relative h-48 w-full rounded-2xl border-2 border-dashed border-primary/20 bg-primary/5 flex flex-col items-center justify-center overflow-hidden transition-all hover:border-primary/50">
+                    {posterUrl ? (
+                      <>
+                        <img src={posterUrl} alt="Preview" className="h-full w-full object-cover" />
+                        <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-lg" onClick={() => setPosterUrl(null)}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center cursor-pointer space-y-2 w-full h-full">
+                        <div className="p-4 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-all">
+                          <ImagePlus className="h-8 w-8 text-primary" />
+                        </div>
+                        <p className="text-sm font-medium">Upload Event Poster</p>
+                        <p className="text-xs text-muted-foreground">JPG, PNG, WEBP (Max 5MB)</p>
+                        <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                      </label>
+                    )}
+                    {isUploading && (
+                      <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
+                        <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></span>
+                      </div>
+                    )}
+                  </div>
                 ) : (
-                  <label className="flex flex-col items-center justify-center cursor-pointer space-y-2 w-full h-full">
-                    <div className="p-4 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-all">
-                      <ImagePlus className="h-8 w-8 text-primary" />
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <input
+                        type="url"
+                        value={bannerUrlInput}
+                        onChange={(e) => setBannerUrlInput(e.target.value)}
+                        placeholder="https://example.com/poster.jpg"
+                        className="flex-1 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-medium focus:border-primary focus:outline-none transition-all"
+                      />
                     </div>
-                    <p className="text-sm font-medium">Upload Event Poster</p>
-                    <p className="text-xs text-muted-foreground">JPG, PNG, WEBP (Max 5MB)</p>
-                    <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-                  </label>
-                )}
-                {isUploading && (
-                  <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
-                    <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></span>
+                    {bannerUrlInput && (
+                      <div className="h-40 w-full rounded-2xl overflow-hidden border border-primary/10">
+                        <img src={bannerUrlInput} alt="URL Preview" className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

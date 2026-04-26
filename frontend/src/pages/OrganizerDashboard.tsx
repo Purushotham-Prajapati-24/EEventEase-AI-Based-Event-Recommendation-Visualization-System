@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Plus, Users, Trash2, Image as ImageIcon } from "lucide-react";
@@ -33,11 +33,7 @@ export const OrganizerDashboard = () => {
     action: () => {},
   });
 
-  useEffect(() => {
-    fetchEvents();
-  }, []);
-
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     try {
       const response = await api.get("/events/organizer");
       setEvents(response as any[]);
@@ -46,7 +42,11 @@ export const OrganizerDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
 
   const handleDeleteClick = (id: string) => {
     setAlertConfig({

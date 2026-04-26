@@ -32,12 +32,16 @@ export const Dashboard = () => {
   // Data for Interest Radar
   const radarData = useMemo(() => {
     const userInterests = user?.interests || [];
-    return userInterests.map(interest => ({
-      subject: interest,
-      A: Math.floor(Math.random() * 40) + 60, // Match score
-      B: Math.floor(Math.random() * 50) + 30, // Average campus interest
-      fullMark: 100,
-    }));
+    return userInterests.map(interest => {
+      // Create a simple stable hash for "random" look without impurity
+      const hash = interest.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      return {
+        subject: interest,
+        A: (hash % 40) + 60, // Stable match score
+        B: ((hash * 7) % 50) + 30, // Stable campus average
+        fullMark: 100,
+      };
+    });
   }, [user]);
 
   // Data for Trending Bar Chart

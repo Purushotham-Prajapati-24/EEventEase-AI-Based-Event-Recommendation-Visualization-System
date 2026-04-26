@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import api from "../../lib/api";
+import api from "@/lib/api";
 
 interface ChatState {
   chats: any[];
@@ -18,13 +18,15 @@ const initialState: ChatState = {
 };
 
 export const fetchChats = createAsyncThunk("chat/fetchChats", async () => {
-  const response = await api.get("/chats");
-  return response.data;
+  return await api.get("/chats");
 });
 
 export const fetchMessages = createAsyncThunk("chat/fetchMessages", async (chatId: string) => {
-  const response = await api.get(`/chats/${chatId}/messages`);
-  return response.data;
+  return await api.get(`/chats/${chatId}/messages`);
+});
+
+export const accessChat = createAsyncThunk("chat/accessChat", async (userId: string) => {
+  return await api.post("/chats", { userId });
 });
 
 const chatSlice = createSlice({
@@ -33,32 +35,47 @@ const chatSlice = createSlice({
   reducers: {
     setActiveChat: (state, action) => {
       state.activeChat = action.payload;
+      state.messages = [];
     },
     addMessage: (state, action) => {
-      state.messages.push(action.payload);
+      const exists = state.messages.find((m) => m._id === action.payload._id);
+      if (!exists) {
+        state.messages.push(action.payload);
+      }
     },
     updateMessageStatus: (state, action) => {
       const { messageId, status } = action.payload;
       const message = state.messages.find((m) => m._id === messageId);
-      if (message) {
-        message.status = status;
+      if (message) message.status = status;
+    },
+    addChat: (state, action) => {
+      const exists = state.chats.find((c) => c._id === action.payload._id);
+      if (!exists) {
+        state.chats.unshift(action.payload);
       }
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchChats.pending, (state) => {
-        state.loading = true;
-      })
+      .addCase(fetchChats.pending, (state) => { state.loading = true; })
       .addCase(fetchChats.fulfilled, (state, action) => {
         state.loading = false;
-        state.chats = action.payload;
+        state.chats = Array.isArray(action.payload) ? action.payload : [];
+      })
+      .addCase(fetchChats.rejected, (state) => {
+        state.loading = false;
+        state.error = "Failed to fetch chats";
       })
       .addCase(fetchMessages.fulfilled, (state, action) => {
-        state.messages = action.payload;
+        state.messages = Array.isArray(action.payload) ? action.payload : [];
+      })
+      .addCase(accessChat.fulfilled, (state, action) => {
+        const exists = state.chats.find((c) => c._id === action.payload._id);
+        if (!exists) state.chats.unshift(action.payload);
+        state.activeChat = action.payload;
       });
   },
 });
 
-export const { setActiveChat, addMessage, updateMessageStatus } = chatSlice.actions;
+export const { setActiveChat, addMessage, updateMessageStatus, addChat } = chatSlice.actions;
 export default chatSlice.reducer;

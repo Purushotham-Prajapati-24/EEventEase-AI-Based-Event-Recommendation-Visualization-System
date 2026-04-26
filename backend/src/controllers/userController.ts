@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import User from "../models/User";
+import Notification from "../models/Notification";
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
@@ -61,8 +62,13 @@ export const followUser = async (req: any, res: Response) => {
     await User.findByIdAndUpdate(currentUserId, { $push: { following: id } });
 
     // Trigger Notification
-    // (Assuming notification logic is imported or handled via a service)
-    // await createNotification({ recipient: id, sender: currentUserId, type: "follow", message: `${currentUser.name} followed you` });
+    await Notification.create({ 
+      recipient: id, 
+      sender: currentUserId, 
+      type: "follow", 
+      message: `${currentUser.name} started following you`,
+      link: `/profile/${currentUserId}` 
+    });
 
     res.status(200).json({ message: "Followed successfully" });
   } catch (error) {
@@ -81,5 +87,25 @@ export const unfollowUser = async (req: any, res: Response) => {
     res.status(200).json({ message: "Unfollowed successfully" });
   } catch (error) {
     res.status(500).json({ message: "Failed to unfollow user", error });
+  }
+};
+
+export const getSuggestedUsers = async (req: any, res: Response) => {
+  try {
+    const currentUser = await User.findById(req.user._id).select("interests following");
+    if (!currentUser || !currentUser.interests?.length) {
+      return res.status(200).json([]);
+    }
+
+    const suggestions = await User.find({
+      _id: { $ne: req.user._id, $nin: currentUser.following },
+      interests: { $in: currentUser.interests },
+    })
+      .select("name email profileImage interests role")
+      .limit(10);
+
+    res.status(200).json(suggestions);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to get suggestions", error });
   }
 };

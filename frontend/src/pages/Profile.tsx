@@ -1,30 +1,31 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../store";
 import { fetchProfile, followUser, clearProfile } from "../store/slices/profileSlice";
+import { accessChat } from "../store/slices/chatSlice";
 import { Button } from "../components/ui/button";
 import { 
   Users, 
   UserPlus, 
   Calendar, 
-  BarChart3, 
-  MapPin, 
-  Link as LinkIcon,
   Edit3,
   MessageSquare
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DotPattern } from "../components/ui/dot-pattern-1";
 import { ProfileEditModal } from "../components/ProfileEditModal";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 const Profile = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const { currentProfile, loading } = useSelector((state: RootState) => state.profile);
   const [activeTab, setActiveTab] = useState<"events" | "analytics" | "following">("events");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
 
   const isOwnProfile = currentUser?._id === id;
 
@@ -32,10 +33,18 @@ const Profile = () => {
     if (id) {
       dispatch(fetchProfile(id));
     }
-    return () => {
-      dispatch(clearProfile());
-    };
+    return () => { dispatch(clearProfile()); };
   }, [id, dispatch]);
+
+  useEffect(() => {
+    if (isOwnProfile && currentUser?._id) {
+      import("../lib/api").then(({ default: api }) => {
+        api.get("/users/suggestions").then((data: any) => {
+          if (Array.isArray(data)) setSuggestions(data);
+        }).catch(() => {});
+      });
+    }
+  }, [isOwnProfile, currentUser?._id]);
 
   if (loading || !currentProfile) {
     return (
@@ -148,6 +157,53 @@ const Profile = () => {
                 </div>
               </div>
 
+              {/* People You May Know — own profile only */}
+              {isOwnProfile && suggestions.length > 0 && (
+                <div className="md:col-span-1 space-y-4 pt-4 border-t border-primary/10">
+                  <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">People You May Know</h3>
+                  <div className="space-y-3">
+                    {suggestions.map((person) => (
+                      <div key={person._id} className="flex items-center gap-3 p-3 rounded-2xl glass border-primary/5 hover:border-primary/20 transition-all">
+                        <img
+                          src={person.profileImage || `https://i.pravatar.cc/80?u=${person._id}`}
+                          alt={person.name}
+                          className="h-10 w-10 rounded-xl object-cover flex-shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-black text-sm truncate">{person.name}</p>
+                          <p className="text-[10px] text-muted-foreground capitalize">{person.role}</p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {person.interests?.slice(0, 2).map((i: string) => (
+                              <span key={i} className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-primary/10 text-primary uppercase">{i}</span>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Button
+                            size="sm"
+                            className="h-7 px-3 rounded-full text-[10px] font-black uppercase tracking-widest"
+                            onClick={() => dispatch(followUser(person._id))}
+                          >
+                            <UserPlus className="h-3 w-3 mr-1" /> Follow
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-3 rounded-full text-[10px] font-black uppercase tracking-widest"
+                            onClick={async () => {
+                              await dispatch(accessChat(person._id));
+                              navigate("/chat");
+                            }}
+                          >
+                            <MessageSquare className="h-3 w-3 mr-1" /> Message
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="md:col-span-3 space-y-8">
                 {/* Tabs */}
                 <div className="flex gap-8 border-b border-primary/10">
@@ -227,12 +283,43 @@ const Profile = () => {
                         </div>
                       </div>
 
-                      <div className="glass p-12 rounded-[40px] border-primary/5 min-h-[200px] flex items-center justify-center">
-                        <div className="text-center space-y-4">
-                          <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground/20" />
-                          <p className="text-sm font-medium text-muted-foreground italic">
-                            Activity heatmap and interest clusters will appear here as more events are attended.
-                          </p>
+                      <div className="glass p-8 rounded-[40px] border-primary/5 min-h-[300px] flex flex-col justify-center">
+                        <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground mb-6 pl-4">
+                          {currentProfile.role === "organizer" ? "Attendance Impact (Monthly)" : "Event Participation (Monthly)"}
+                        </h4>
+                        <div className="h-64 w-full">
+                          <ResponsiveContainer width="100%" height="100%">
+                            {currentProfile.role === "organizer" ? (
+                              <BarChart data={[
+                                { name: 'Jan', impact: 45 }, { name: 'Feb', impact: 80 }, 
+                                { name: 'Mar', impact: 120 }, { name: 'Apr', impact: 90 },
+                                { name: 'May', impact: 200 }, { name: 'Jun', impact: 150 }
+                              ]}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                                <XAxis dataKey="name" stroke="currentColor" fontSize={10} tickLine={false} axisLine={false} opacity={0.5} />
+                                <YAxis stroke="currentColor" fontSize={10} tickLine={false} axisLine={false} opacity={0.5} />
+                                <Tooltip 
+                                  contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}
+                                  cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                                />
+                                <Bar dataKey="impact" fill="currentColor" className="fill-primary" radius={[4, 4, 0, 0]} />
+                              </BarChart>
+                            ) : (
+                              <LineChart data={[
+                                { name: 'Jan', events: 2 }, { name: 'Feb', events: 5 }, 
+                                { name: 'Mar', events: 3 }, { name: 'Apr', events: 8 },
+                                { name: 'May', events: 4 }, { name: 'Jun', events: 7 }
+                              ]}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                                <XAxis dataKey="name" stroke="currentColor" fontSize={10} tickLine={false} axisLine={false} opacity={0.5} />
+                                <YAxis stroke="currentColor" fontSize={10} tickLine={false} axisLine={false} opacity={0.5} />
+                                <Tooltip 
+                                  contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}
+                                />
+                                <Line type="monotone" dataKey="events" stroke="currentColor" strokeWidth={3} className="stroke-secondary" dot={{ strokeWidth: 2, r: 4 }} activeDot={{ r: 6 }} />
+                              </LineChart>
+                            )}
+                          </ResponsiveContainer>
                         </div>
                       </div>
                     </div>

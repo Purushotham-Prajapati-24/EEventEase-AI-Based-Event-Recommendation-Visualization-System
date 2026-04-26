@@ -147,8 +147,12 @@ export const EventDetails = () => {
                           <p className="text-sm text-muted-foreground max-w-xs">
                             Coordinate with fellow students and organizers in the real-time discussion channel.
                           </p>
-                          <Button asChild className="rounded-2xl gap-2 mt-4">
-                            <Link to={`/chat?room=${event.discussionChat}`}>Open Discussion</Link>
+                          <Button asChild={!!event.discussionChat} disabled={!event.discussionChat} className="rounded-2xl gap-2 mt-4">
+                            {event.discussionChat ? (
+                              <Link to={`/chat?room=${event.discussionChat}`}>Open Discussion</Link>
+                            ) : (
+                              <span>Chat Generating...</span>
+                            )}
                           </Button>
                         </>
                       ) : (
@@ -177,8 +181,14 @@ export const EventDetails = () => {
                       </div>
                       
                       {isOrganizer && (
-                        <Button className="w-full rounded-2xl gap-2 bg-secondary hover:bg-secondary/90 shadow-lg shadow-secondary/20">
-                          <Megaphone className="h-4 w-4" /> Post Announcement
+                        <Button asChild={!!event.announcementChat} disabled={!event.announcementChat} className="w-full rounded-2xl gap-2 bg-secondary hover:bg-secondary/90 shadow-lg shadow-secondary/20">
+                          {event.announcementChat ? (
+                            <Link to={`/chat?room=${event.announcementChat}`}>
+                              <Megaphone className="h-4 w-4" /> Post Announcement
+                            </Link>
+                          ) : (
+                            <span>Setting up...</span>
+                          )}
                         </Button>
                       )}
                     </motion.div>

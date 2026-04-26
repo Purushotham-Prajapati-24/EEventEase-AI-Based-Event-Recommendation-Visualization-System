@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { Eye, EyeOff } from "lucide-react"
 import { useNavigate, Link } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -21,6 +22,7 @@ export const Login = () => {
   const dispatch = useDispatch()
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -79,7 +81,25 @@ export const Login = () => {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} />
+                      <div className="relative">
+                        <Input type={showPassword ? "text" : "password"} {...field} />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                          )}
+                          <span className="sr-only">
+                            {showPassword ? "Hide password" : "Show password"}
+                          </span>
+                        </Button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

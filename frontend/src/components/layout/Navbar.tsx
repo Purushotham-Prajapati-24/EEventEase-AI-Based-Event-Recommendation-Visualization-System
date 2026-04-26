@@ -52,9 +52,13 @@ export const Navbar = () => {
                   <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-primary" />
                   <span className="sr-only">Toggle theme</span>
                 </Button>
-                <div className="h-10 w-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center font-black text-primary">
+                <Link
+                  to={`/profile/${user._id}`}
+                  title="View Profile"
+                  className="h-10 w-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center font-black text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200"
+                >
                   {user.name.charAt(0)}
-                </div>
+                </Link>
                 <Button 
                   variant="ghost" 
                   size="sm" 

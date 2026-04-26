@@ -13,9 +13,7 @@ import { OrganizerDashboard } from "./pages/OrganizerDashboard"
 import Profile from "./pages/Profile"
 import Chat from "./pages/Chat"
 import { NotFound } from "./pages/NotFound"
-import { useSelector } from "react-redux"
-import type { RootState } from "./store"
-import { OnboardingInterests } from "./components/OnboardingInterests"
+import Onboarding from "./pages/Onboarding"
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -51,11 +49,8 @@ const OrganizerAnalytics = () => <div className="p-8">Organizer Analytics</div>
 const AIInsights = () => <div className="p-8">AI Insights Dashboard</div>
 
 function App() {
-  const { user } = useSelector((state: RootState) => state.auth);
-
   return (
     <BrowserRouter>
-      {user && user.interests === undefined && <OnboardingInterests />}
       <RootLayout>
         <Routes>
           <Route path="/" element={<Home />} />
@@ -69,6 +64,7 @@ function App() {
           <Route path="/admin/insights" element={<AIInsights />} />
           <Route path="/profile/:id" element={<Profile />} />
           <Route path="/chat" element={<Chat />} />
+          <Route path="/onboarding" element={<Onboarding />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </RootLayout>

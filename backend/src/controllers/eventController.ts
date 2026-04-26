@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import Event from "../models/Event";
 
+import Chat from "../models/Chat";
+
 export const getEvents = async (req: Request, res: Response) => {
   try {
     const events = await Event.find().populate("organizer", "name email");
@@ -12,10 +14,28 @@ export const getEvents = async (req: Request, res: Response) => {
 
 export const getEventById = async (req: Request, res: Response) => {
   try {
-    const event = await Event.findById(req.params.id).populate("organizer", "name email");
+    let event = await Event.findById(req.params.id).populate("organizer", "name email");
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
+
+    // Auto-create missing chats for older events
+    let updated = false;
+    if (!event.discussionChat) {
+      const dChat = await Chat.create({ isGroupChat: true, groupName: `${event.title} - Discussion`, groupAdmin: event.organizer });
+      event.discussionChat = dChat._id as any;
+      updated = true;
+    }
+    if (!event.announcementChat) {
+      const aChat = await Chat.create({ isGroupChat: true, groupName: `${event.title} - Announcements`, groupAdmin: event.organizer });
+      event.announcementChat = aChat._id as any;
+      updated = true;
+    }
+    
+    if (updated) {
+      await event.save();
+    }
+
     res.status(200).json(event);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch event", error });
@@ -24,10 +44,30 @@ export const getEventById = async (req: Request, res: Response) => {
 
 export const createEvent = async (req: Request, res: Response) => {
   try {
+    const organizerId = (req as any).user.id;
+    
+    // Create discussion and announcement chats for the event
+    const discussionChat = await Chat.create({
+      isGroupChat: true,
+      groupName: `${req.body.title} - Discussion`,
+      groupAdmin: organizerId,
+      participants: [organizerId]
+    });
+    
+    const announcementChat = await Chat.create({
+      isGroupChat: true,
+      groupName: `${req.body.title} - Announcements`,
+      groupAdmin: organizerId,
+      participants: [organizerId]
+    });
+
     const newEvent = new Event({
       ...req.body,
-      organizer: (req as any).user.id, // Assuming auth middleware attaches user
+      organizer: organizerId,
+      discussionChat: discussionChat._id,
+      announcementChat: announcementChat._id,
     });
+    
     const savedEvent = await newEvent.save();
     res.status(201).json(savedEvent);
   } catch (error) {

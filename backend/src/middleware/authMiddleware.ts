@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
 export interface AuthRequest extends Request {
-  user?: string | jwt.JwtPayload;
+  user?: { id: string; _id: string } & Record<string, any>;
 }
 
 export const protect = (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -11,9 +11,9 @@ export const protect = (req: AuthRequest, res: Response, next: NextFunction) => 
   if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
     try {
       token = req.headers.authorization.split(" ")[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
-      req.user = decoded;
-      console.log("Token verified for user:", (decoded as any).id);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any;
+      // Normalise so both req.user.id and req.user._id work
+      req.user = { ...decoded, id: decoded.id, _id: decoded.id };
       return next();
     } catch (error) {
       console.error("Token verification failed:", error);

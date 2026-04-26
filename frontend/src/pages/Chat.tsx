@@ -1,19 +1,21 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { useLocation } from "react-router-dom";
 import type { RootState, AppDispatch } from "../store";
 import { fetchChats, fetchMessages, setActiveChat, addMessage } from "../store/slices/chatSlice";
 import { Button } from "../components/ui/button";
 import { 
   Send, 
-  Check, 
   CheckCheck, 
   Search, 
   MoreVertical, 
   Paperclip, 
   Smile,
-  ChevronLeft
+  ChevronLeft,
+  MessageSquare
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLocation } from "react-router-dom";
 import { io, Socket } from "socket.io-client";
 
 const Chat = () => {
@@ -22,53 +24,108 @@ const Chat = () => {
   const { chats, activeChat, messages, loading } = useSelector((state: RootState) => state.chat);
   const [newMessage, setNewMessage] = useState("");
   const [socket, setSocket] = useState<Socket | null>(null);
+  const [socketConnected, setSocketConnected] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
 
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
+  // Initialize socket once
   useEffect(() => {
-    dispatch(fetchChats());
-    
-    // Initialize Socket
-    const newSocket = io("http://localhost:5000"); // Adjust for production
+    const newSocket = io(BACKEND_URL, { withCredentials: true });
     setSocket(newSocket);
+
+    newSocket.on("connected", () => setSocketConnected(true));
 
     return () => {
       newSocket.disconnect();
     };
-  }, [dispatch]);
+  }, [BACKEND_URL]);
 
+  // Setup personal room after socket connected
   useEffect(() => {
-    if (socket && user) {
+    if (socket && user && socketConnected) {
       socket.emit("setup", user._id);
     }
-  }, [socket, user]);
+  }, [socket, user, socketConnected]);
 
+  // Join chat room when active chat changes
   useEffect(() => {
-    if (socket) {
-      socket.on("message recieved", (newMessage: any) => {
-        if (activeChat && activeChat._id === newMessage.chat._id) {
-          dispatch(addMessage(newMessage));
-        }
-      });
+    if (socket && activeChat) {
+      socket.emit("join-chat", activeChat._id);
     }
+  }, [socket, activeChat]);
+
+  // Listen for incoming messages
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewMessage = (newMsg: any) => {
+      if (activeChat && activeChat._id === (newMsg.chat?._id || newMsg.chat)) {
+        dispatch(addMessage(newMsg));
+      }
+    };
+
+    socket.on("message recieved", handleNewMessage);
+
+    return () => {
+      socket.off("message recieved", handleNewMessage);
+    };
   }, [socket, activeChat, dispatch]);
 
+  // Auto-select chat from query param
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const roomId = params.get("room");
+    if (roomId && chats.length > 0) {
+      const chat = chats.find((c) => c._id === roomId);
+      if (chat) {
+        dispatch(setActiveChat(chat));
+        dispatch(fetchMessages(chat._id));
+      }
+    }
+  }, [location.search, chats, dispatch]);
+
+  // Fetch chats on mount
+  useEffect(() => {
+    dispatch(fetchChats());
+  }, [dispatch]);
+
+  // Handle ?room= query parameter to auto-open chat
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const roomId = queryParams.get("room");
+    if (roomId && roomId !== "undefined" && chats.length > 0 && !activeChat) {
+      const targetChat = chats.find(c => c._id === roomId);
+      if (targetChat) {
+        dispatch(setActiveChat(targetChat));
+        dispatch(fetchMessages(targetChat._id));
+      }
+    }
+  }, [location.search, chats, activeChat, dispatch]);
+
+  // Auto-scroll to latest message
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSendMessage = () => {
-    if (newMessage.trim() && socket && activeChat) {
-      const messageData = {
-        chatId: activeChat._id,
-        senderId: user?._id,
-        content: newMessage,
-      };
-      
-      socket.emit("send-message", messageData);
-      setNewMessage("");
-      // Note: Message will be received via socket and added to state
-    }
+    if (!newMessage.trim() || !socket || !activeChat || !user) return;
+
+    socket.emit("send-message", {
+      chatId: activeChat._id,
+      senderId: user._id,
+      content: newMessage.trim(),
+    });
+
+    setNewMessage("");
   };
+
+  const getChatName = (chat: any) =>
+    chat.participants?.find((p: any) => p._id !== user?._id)?.name || chat.groupName || "Unknown";
+
+  const formatTime = (dateStr: string) =>
+    new Date(dateStr).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   return (
     <div className="h-screen bg-background pt-20 flex overflow-hidden">
@@ -77,21 +134,23 @@ const Chat = () => {
         <div className="p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-black tracking-tighter">Messages</h1>
-            <Button variant="ghost" size="icon" className="rounded-xl">
-              <MoreVertical className="h-5 w-5" />
-            </Button>
+            <div className={`h-2 w-2 rounded-full ${socketConnected ? "bg-green-500 animate-pulse" : "bg-red-500"}`} title={socketConnected ? "Connected" : "Disconnected"} />
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input 
-              type="text" 
-              placeholder="Search conversations..." 
+            <input
+              type="text"
+              placeholder="Search conversations..."
               className="w-full pl-10 pr-4 py-2 bg-primary/5 border border-primary/10 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-primary/30"
             />
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2">
+          {loading && <p className="text-center text-xs text-muted-foreground py-4">Loading chats...</p>}
+          {!loading && chats.length === 0 && (
+            <p className="text-center text-xs text-muted-foreground py-8 italic">No conversations yet.</p>
+          )}
           {chats.map((chat) => (
             <motion.div
               key={chat._id}
@@ -105,15 +164,13 @@ const Chat = () => {
             >
               <div className="flex items-center gap-4">
                 <div className="h-12 w-12 rounded-xl bg-slate-800 overflow-hidden flex-shrink-0">
-                  <img src={`https://i.pravatar.cc/150?u=${chat._id}`} alt="chat" />
+                  <img src={`https://i.pravatar.cc/150?u=${chat._id}`} alt="chat" className="h-full w-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-start">
-                    <h4 className="font-bold truncate">
-                      {chat.participants.find((p: any) => p._id !== user?._id)?.name || chat.groupName}
-                    </h4>
+                    <h4 className="font-bold truncate">{getChatName(chat)}</h4>
                     <span className={`text-[10px] ${activeChat?._id === chat._id ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                      12:45
+                      {chat.updatedAt ? formatTime(chat.updatedAt) : ""}
                     </span>
                   </div>
                   <p className={`text-xs truncate ${activeChat?._id === chat._id ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
@@ -133,21 +190,19 @@ const Chat = () => {
             {/* Chat Header */}
             <div className="p-4 border-b border-primary/10 flex items-center justify-between glass">
               <div className="flex items-center gap-4">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className="md:hidden"
                   onClick={() => dispatch(setActiveChat(null))}
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </Button>
                 <div className="h-10 w-10 rounded-lg bg-slate-800 overflow-hidden">
-                  <img src={`https://i.pravatar.cc/150?u=${activeChat._id}`} alt="chat" />
+                  <img src={`https://i.pravatar.cc/150?u=${activeChat._id}`} alt="chat" className="h-full w-full object-cover" />
                 </div>
                 <div>
-                  <h4 className="font-black text-sm">
-                    {activeChat.participants.find((p: any) => p._id !== user?.id)?.name || activeChat.groupName}
-                  </h4>
+                  <h4 className="font-black text-sm">{getChatName(activeChat)}</h4>
                   <p className="text-[10px] text-primary font-bold uppercase tracking-widest">Online</p>
                 </div>
               </div>
@@ -160,25 +215,23 @@ const Chat = () => {
             {/* Messages Feed */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               <AnimatePresence>
-                {messages.map((msg, idx) => (
+                {messages.map((msg) => (
                   <motion.div
                     key={msg._id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className={`flex ${msg.sender._id === user?._id ? "justify-end" : "justify-start"}`}
+                    className={`flex ${msg.sender?._id === user?._id ? "justify-end" : "justify-start"}`}
                   >
-                    <div className={`max-w-[70%] space-y-1 ${msg.sender._id === user?._id ? "items-end" : "items-start"}`}>
-                      <div className={`px-4 py-2 rounded-2xl text-sm ${msg.sender._id === user?._id ? "bg-primary text-primary-foreground rounded-tr-none" : "glass rounded-tl-none"}`}>
+                    <div className={`max-w-[70%] space-y-1 flex flex-col ${msg.sender?._id === user?._id ? "items-end" : "items-start"}`}>
+                      <div className={`px-4 py-2 rounded-2xl text-sm ${msg.sender?._id === user?._id ? "bg-primary text-primary-foreground rounded-tr-none" : "glass rounded-tl-none"}`}>
                         {msg.content}
                       </div>
                       <div className="flex items-center gap-1 px-1">
                         <span className="text-[10px] text-muted-foreground">
-                          {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {formatTime(msg.createdAt)}
                         </span>
-                        {msg.sender._id === user?.id && (
-                          <div className="flex">
-                            <CheckCheck className={`h-3 w-3 ${msg.readBy?.length > 1 ? "text-primary" : "text-muted-foreground"}`} />
-                          </div>
+                        {msg.sender?._id === user?._id && (
+                          <CheckCheck className={`h-3 w-3 ${msg.readBy?.length > 1 ? "text-primary" : "text-muted-foreground"}`} />
                         )}
                       </div>
                     </div>
@@ -191,16 +244,17 @@ const Chat = () => {
             {/* Input Area */}
             <div className="p-4 glass m-4 rounded-[32px] border-primary/10 flex items-center gap-4">
               <Button variant="ghost" size="icon" className="rounded-xl"><Smile className="h-5 w-5" /></Button>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder="Type a message..." 
+                onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                placeholder="Type a message..."
                 className="flex-1 bg-transparent border-none focus:outline-none text-sm"
               />
-              <Button 
+              <Button
                 onClick={handleSendMessage}
+                disabled={!newMessage.trim() || !socketConnected}
                 className="rounded-2xl h-12 w-12 p-0 flex items-center justify-center bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
               >
                 <Send className="h-5 w-5" />

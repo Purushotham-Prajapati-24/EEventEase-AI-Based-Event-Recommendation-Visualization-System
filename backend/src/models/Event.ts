@@ -13,6 +13,8 @@ export interface IEvent extends Document {
   status: "upcoming" | "ongoing" | "completed" | "cancelled";
   posterUrl?: string;
   blacklistedUsers: mongoose.Types.ObjectId[];
+  discussionChat?: mongoose.Types.ObjectId;
+  announcementChat?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
