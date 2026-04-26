@@ -198,47 +198,49 @@ export const Discovery = () => {
                 whileHover={{ y: -10 }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
-                <Card className="flex-shrink-0 w-[480px] flex flex-col h-full glass border-primary/30 shadow-2xl hover:border-primary transition-all group overflow-hidden rounded-[2.5rem]">
-                  <div className="h-56 w-full overflow-hidden relative">
+                <Card className="flex-shrink-0 w-[340px] flex flex-col h-full glass border-primary/30 shadow-2xl hover:border-primary transition-all group overflow-hidden rounded-[1.5rem]">
+                  <div className="h-40 w-full overflow-hidden relative">
                     {rec.event.posterUrl ? (
                       <img src={rec.event.posterUrl} alt={rec.event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                        <Target className="h-16 w-16 text-primary/20 animate-pulse" />
+                        <Target className="h-12 w-12 text-primary/20 animate-pulse" />
                       </div>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between">
-                      <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-background/40 backdrop-blur-md border border-white/10">
+                    <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+                      <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-background/40 backdrop-blur-md border border-white/10">
                         <Hash className="h-3 w-3 text-white" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-white">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-white">
                           {rec.event.club || "Campus Event"}
                         </span>
                       </div>
-                      <div className="px-4 py-1.5 rounded-full bg-primary backdrop-blur-md text-white border border-primary/50 shadow-xl shadow-primary/20">
-                        <span className="text-[12px] font-black uppercase tracking-widest">
+                      <div className="px-3 py-1 rounded-full bg-primary backdrop-blur-md text-white border border-primary/50 shadow-xl shadow-primary/20">
+                        <span className="text-[10px] font-black uppercase tracking-widest">
                           {Math.floor(rec.score)}% Sync
                         </span>
                       </div>
                     </div>
                   </div>
-                  <CardHeader className="p-8 pb-4">
-                    <CardTitle className="text-4xl font-black group-hover:text-primary transition-colors leading-tight mb-2">
+                  <CardHeader className="p-5 pb-2">
+                    <CardTitle className="text-xl font-black group-hover:text-primary transition-colors leading-tight mb-1 line-clamp-1" title={rec.event.title}>
                       {rec.event.title}
                     </CardTitle>
-                    <CardDescription className="font-black text-muted-foreground flex items-center gap-2 text-sm">
+                    <CardDescription className="font-bold text-muted-foreground flex items-center gap-1.5 text-[11px]">
                       <div className="h-1 w-1 rounded-full bg-primary" />
-                      {new Date(rec.event.date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+                      {new Date(rec.event.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="px-8 pb-8 flex-1">
-                    <div className="space-y-8">
-                      <div className="relative p-4 rounded-2xl bg-primary/5 border border-primary/10 border-l-4 border-l-primary italic font-medium text-sm text-muted-foreground leading-relaxed">
-                        "{rec.reason}"
+                  <CardContent className="px-5 pb-4 flex-1 flex flex-col justify-between">
+                    <div className="space-y-4">
+                      <div className="relative p-3 rounded-xl bg-primary/5 border border-primary/10 border-l-4 border-l-primary">
+                        <p className="font-medium text-[13px] text-foreground/80 leading-snug line-clamp-4" title={rec.reason}>
+                          {rec.reason}
+                        </p>
                       </div>
 
                       {rec.breakdown && (
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                           <div className="h-2 w-full bg-primary/5 rounded-full overflow-hidden flex gap-0.5 p-[1px]">
                             <motion.div 
                               initial={{ width: 0 }}
@@ -275,9 +277,9 @@ export const Discovery = () => {
                       )}
 
                       {rec.event.interests && rec.event.interests.length > 0 && (
-                        <div className="flex flex-wrap gap-2 pt-2">
+                        <div className="flex flex-wrap gap-1.5 pt-1">
                           {rec.event.interests.map((interest: string) => (
-                            <span key={interest} className="bg-primary/5 text-primary/70 text-[9px] font-black px-3 py-1.5 rounded-xl border border-primary/10 uppercase tracking-tighter">
+                            <span key={interest} className="bg-primary/5 text-primary/70 text-[8px] font-black px-2 py-1 rounded-lg border border-primary/10 uppercase tracking-tighter">
                               {interest}
                             </span>
                           ))}
@@ -285,10 +287,10 @@ export const Discovery = () => {
                       )}
                     </div>
                   </CardContent>
-                  <CardFooter className="p-8 pt-0 mt-auto">
-                    <Button asChild className="w-full h-16 rounded-2xl shadow-xl bg-primary hover:bg-primary/90 transition-all text-lg font-black group/btn">
+                  <CardFooter className="p-5 pt-0 mt-auto">
+                    <Button asChild className="w-full h-10 rounded-xl shadow-md bg-primary hover:bg-primary/90 transition-all text-sm font-black group/btn">
                       <Link to={`/events/${rec.event._id}`} className="flex items-center justify-center gap-2">
-                        View Analysis <ChevronRight className="h-5 w-5 group-hover/btn:translate-x-1 transition-transform" />
+                        View Analysis <ChevronRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
                       </Link>
                     </Button>
                   </CardFooter>

@@ -3,9 +3,15 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const groq = new Groq({
+const primaryGroq = new Groq({
   apiKey: process.env.GROQ_API_KEY || "",
 });
+
+const fallbackGroq = new Groq({
+  apiKey: process.env.GROQ_FALLBACK_API_KEY || "",
+});
+
+let currentGroq = process.env.GROQ_API_KEY ? primaryGroq : fallbackGroq;
 
 export const generateEventRecommendations = async (
   userInterests: string[],
@@ -14,18 +20,6 @@ export const generateEventRecommendations = async (
   eventDescription: string,
   eventInterests: string[] = []
 ) => {
-  if (!process.env.GROQ_API_KEY) {
-    console.warn("GROQ_API_KEY is not set. Falling back to basic match.");
-    // Basic fallback algorithm as defined in the plan:
-    // (Matched Tags / Total Interests) * 100
-    const matched = userInterests.filter(i => eventTags.includes(i)).length;
-    const score = userInterests.length ? Math.round((matched / userInterests.length) * 100) : 0;
-    return {
-      matchScore: score,
-      explanation: `Matched ${matched} of your interests.`,
-    };
-  }
-
   try {
     const prompt = `
       You are an expert student life coordinator at a university.
@@ -44,23 +38,36 @@ export const generateEventRecommendations = async (
 
       Provide your analysis in strictly valid JSON format with:
       - "matchScore": an integer from 0 to 100 representing the total relevance.
-      - "explanation": a short (max 15 words) punchy explanation.
+      - "explanation": A detailed, personalized verdict (2-3 sentences) explaining EXACTLY why this event is perfect for the user based on their specific interests. Also, analyze the event description and explicitly mention key highlights like prize money, special guests, or exclusive opportunities if they exist.
       - "breakdown": an object with "topic", "skill", and "community" scores (0-100 each).
       
       Return ONLY raw JSON. No markdown.
     `;
 
-    const chatCompletion = await groq.chat.completions.create({
+    const requestConfig = {
       messages: [
         {
-          role: "user",
+          role: "user" as const,
           content: prompt,
         },
       ],
       model: "llama-3.1-8b-instant",
       temperature: 0.3,
-      response_format: { type: "json_object" },
-    });
+      response_format: { type: "json_object" as const },
+    };
+
+    let chatCompletion;
+    try {
+      chatCompletion = await currentGroq.chat.completions.create(requestConfig);
+    } catch (apiError: any) {
+      if (apiError?.status === 429) {
+        console.warn("Rate limit reached on current Groq API key. Switching keys...");
+        currentGroq = currentGroq === primaryGroq ? fallbackGroq : primaryGroq;
+        chatCompletion = await currentGroq.chat.completions.create(requestConfig);
+      } else {
+        throw apiError;
+      }
+    }
 
     const responseContent = chatCompletion.choices[0]?.message?.content || "{}";
     const result = JSON.parse(responseContent);
@@ -72,9 +79,13 @@ export const generateEventRecommendations = async (
     };
   } catch (error) {
     console.error("Error generating recommendations:", error);
+    // Fallback to basic match if AI completely fails
+    const matched = userInterests.filter(i => eventTags.includes(i)).length;
+    const score = userInterests.length ? Math.round((matched / userInterests.length) * 100) : 0;
     return {
-      matchScore: 0,
-      explanation: "Failed to generate AI recommendation.",
+      matchScore: score,
+      explanation: `Matched ${matched} of your interests. (AI temporarily unavailable)`,
+      breakdown: { topic: 0, skill: 0, community: 0 }
     };
   }
 };

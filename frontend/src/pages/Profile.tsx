@@ -33,12 +33,25 @@ const Profile = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const { currentProfile, loading, error } = useSelector((state: RootState) => state.profile);
-  const [activeTab, setActiveTab] = useState<"events" | "analytics" | "following">("events");
+  const [activeTab, setActiveTab] = useState<"events" | "attended" | "analytics" | "following">("events");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [connectionsModal, setConnectionsModal] = useState<{isOpen: boolean, type: "followers" | "following"}>({isOpen: false, type: "followers"});
   const [suggestions, setSuggestions] = useState<User[]>([]);
 
   const isOwnProfile = currentUser?._id === id;
+
+  const handleCloseEvent = async (eventId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm("Are you sure you want to mark this event as completed?")) {
+      try {
+        await api.patch(`/events/${eventId}/close`);
+        if (id) dispatch(fetchProfile(id));
+      } catch (error) {
+        console.error(error);
+        alert("Failed to close event.");
+      }
+    }
+  };
 
   useEffect(() => {
     if (id) {
@@ -80,13 +93,13 @@ const Profile = () => {
       {/* Profile Hero */}
       <section className="container mx-auto px-8">
         <div className="glass rounded-[40px] border-primary/10 overflow-hidden relative">
-          <div className="h-48 bg-white border-b border-border relative">
+          <div className="h-48 bg-slate-100 dark:bg-slate-900 border-b border-border relative overflow-hidden">
             <DotPattern className="opacity-10" />
           </div>
           
           <div className="px-12 pb-12 relative">
-            <div className="flex flex-col md:flex-row items-end gap-8 -mt-16 relative z-10">
-              <div className="h-32 w-32 rounded-[32px] border-4 border-background bg-slate-800 overflow-hidden shadow-2xl">
+            <div className="flex flex-col md:flex-row md:items-end gap-6 relative z-10">
+              <div className="h-32 w-32 rounded-[32px] border-4 border-background bg-slate-800 overflow-hidden shadow-2xl shrink-0 -mt-16">
                 <img 
                   src={currentProfile.profileImage || `https://i.pravatar.cc/150?u=${currentProfile._id}`} 
                   alt={currentProfile.name} 
@@ -94,7 +107,7 @@ const Profile = () => {
                 />
               </div>
               
-              <div className="flex-1 space-y-2 mb-2">
+              <div className="flex-1 space-y-1 mb-2 pt-4 md:pt-0">
                 <h1 className="text-4xl font-black tracking-tighter">{currentProfile.name}</h1>
                 <p className="text-muted-foreground font-medium flex items-center gap-2">
                   <span className="capitalize px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-bold tracking-widest">
@@ -283,24 +296,33 @@ const Profile = () => {
 
               <div className="md:col-span-3 space-y-8">
                 {/* Tabs */}
-                <div className="flex gap-8 border-b border-primary/10">
+                <div className="flex gap-8 border-b border-primary/10 overflow-x-auto">
                   <button 
                     onClick={() => setActiveTab("events")}
-                    className={`pb-4 text-sm font-black uppercase tracking-widest transition-colors relative ${activeTab === "events" ? "text-primary" : "text-muted-foreground"}`}
+                    className={`pb-4 text-sm font-black uppercase tracking-widest transition-colors relative whitespace-nowrap ${activeTab === "events" ? "text-primary" : "text-muted-foreground"}`}
                   >
                     {currentProfile.role === "organizer" ? "Hosted Events" : "Attended Events"}
                     {activeTab === "events" && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-full" />}
                   </button>
+                  {currentProfile.role === "organizer" && (
+                    <button 
+                      onClick={() => setActiveTab("attended")}
+                      className={`pb-4 text-sm font-black uppercase tracking-widest transition-colors relative whitespace-nowrap ${activeTab === "attended" ? "text-primary" : "text-muted-foreground"}`}
+                    >
+                      Attended Events
+                      {activeTab === "attended" && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-full" />}
+                    </button>
+                  )}
                   <button 
                     onClick={() => setActiveTab("analytics")}
-                    className={`pb-4 text-sm font-black uppercase tracking-widest transition-colors relative ${activeTab === "analytics" ? "text-primary" : "text-muted-foreground"}`}
+                    className={`pb-4 text-sm font-black uppercase tracking-widest transition-colors relative whitespace-nowrap ${activeTab === "analytics" ? "text-primary" : "text-muted-foreground"}`}
                   >
                     Analytics
                     {activeTab === "analytics" && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-full" />}
                   </button>
                   <button 
                     onClick={() => setActiveTab("following")}
-                    className={`pb-4 text-sm font-black uppercase tracking-widest transition-colors relative ${activeTab === "following" ? "text-primary" : "text-muted-foreground"}`}
+                    className={`pb-4 text-sm font-black uppercase tracking-widest transition-colors relative whitespace-nowrap ${activeTab === "following" ? "text-primary" : "text-muted-foreground"}`}
                   >
                     Following
                     {activeTab === "following" && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-full" />}
@@ -309,16 +331,16 @@ const Profile = () => {
 
                 {/* Tab Content */}
                 <div className="min-h-[400px]">
-                  {activeTab === "events" && (
+                  {(activeTab === "events" || activeTab === "attended") && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {(currentProfile.role === "organizer" ? currentProfile.organizedEvents : currentProfile.registeredEvents)?.map((event: EventData) => (
+                      {(activeTab === "events" ? (currentProfile.role === "organizer" ? currentProfile.organizedEvents : currentProfile.registeredEvents) : currentProfile.registeredEvents)?.map((event: EventData) => (
                         <motion.div 
                           key={event._id}
                           initial={{ opacity: 0, scale: 0.95 }}
                           animate={{ opacity: 1, scale: 1 }}
                           whileHover={{ y: -5 }}
                           className="glass rounded-[32px] border-primary/10 overflow-hidden group hover:border-primary/30 transition-all cursor-pointer flex flex-col"
-                          onClick={() => navigate(`/event/${event._id}`)}
+                          onClick={() => navigate(`/events/${event._id}`)}
                         >
                           <div className="h-40 bg-slate-800 relative overflow-hidden shrink-0">
                             {event.posterUrl ? (
@@ -370,15 +392,26 @@ const Profile = () => {
                               </div>
                             </div>
 
-                            {isOwnProfile && currentProfile.role === 'organizer' && (
+                            {isOwnProfile && currentProfile.role === 'organizer' && activeTab === 'events' && (
                               <div className="mt-6 pt-4 border-t border-primary/10 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                   <Activity className="h-3 w-3 text-primary" />
                                   <span className="text-[9px] font-black uppercase text-muted-foreground">Engagement: {((event._id.split('').reduce((acc: number, c: string) => acc + c.charCodeAt(0), 0)) % 40) + 60}%</span>
                                 </div>
-                                <Button variant="link" className="h-auto p-0 text-[10px] font-black uppercase tracking-widest">
-                                  Manage →
-                                </Button>
+                                <div className="flex gap-2">
+                                  {event.status !== 'completed' && (
+                                    <Button 
+                                      variant="outline" 
+                                      className="h-auto py-1 px-3 text-[10px] font-black uppercase tracking-widest text-primary border-primary hover:bg-primary hover:text-white"
+                                      onClick={(e) => handleCloseEvent(event._id, e)}
+                                    >
+                                      Close Event
+                                    </Button>
+                                  )}
+                                  <Button variant="link" className="h-auto p-0 text-[10px] font-black uppercase tracking-widest">
+                                    Manage →
+                                  </Button>
+                                </div>
                               </div>
                             )}
                           </div>

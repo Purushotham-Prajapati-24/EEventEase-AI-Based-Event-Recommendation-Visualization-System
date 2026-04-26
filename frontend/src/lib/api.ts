@@ -1,29 +1,49 @@
 let accessToken: string | null = null;
+let refreshPromise: Promise<string | null> | null = null;
 
 export const setAccessToken = (token: string | null) => {
   accessToken = token;
 };
 
 export const refreshAccessToken = async () => {
-  try {
-    const response = await fetch("/api/auth/refresh", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      // Important: include credentials to send/receive cookies
-      credentials: "include",
-    });
-
-    if (!response.ok) throw new Error("Refresh failed");
-
-    const data = await response.json();
-    setAccessToken(data.token);
-    return data.token;
-  } catch (error) {
-    setAccessToken(null);
-    localStorage.removeItem("user");
-    window.location.href = "/login";
-    return null;
+  if (refreshPromise) {
+    return refreshPromise;
   }
+
+  refreshPromise = (async () => {
+    try {
+      const response = await fetch("/api/auth/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // Important: include credentials to send/receive cookies
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          throw new Error("Session expired");
+        }
+        throw new Error("Network or server error during refresh");
+      }
+
+      const data = await response.json();
+      setAccessToken(data.token);
+      return data.token;
+    } catch (error: any) {
+      if (error.message === "Session expired") {
+        setAccessToken(null);
+        localStorage.removeItem("user");
+        if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+          window.location.href = "/login";
+        }
+      }
+      return null;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
 };
 
 export const fetchWithAuth = async (url: string, options: RequestInit = {}, isRetry = false): Promise<any> => {

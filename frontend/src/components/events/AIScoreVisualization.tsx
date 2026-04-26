@@ -108,8 +108,8 @@ export const AIScoreVisualization = ({
           </div>
           <div className="space-y-1">
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">The AI Verdict</p>
-            <p className="text-base font-bold text-foreground leading-snug italic tracking-tight">
-              "{reason}"
+            <p className="text-sm font-bold text-foreground leading-relaxed tracking-tight">
+              {reason}
             </p>
           </div>
         </div>

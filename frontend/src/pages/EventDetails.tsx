@@ -1,4 +1,5 @@
 import { MessageSquare, Megaphone, Info, CheckCircle, Bell, CalendarIcon, MapPinIcon, UsersIcon, ArrowLeftIcon } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
@@ -142,9 +143,9 @@ export const EventDetails = () => {
                         <h3 className="text-sm font-black uppercase tracking-widest mb-4 flex items-center gap-2">
                           <Info className="h-4 w-4 text-primary" /> About This Event
                         </h3>
-                        <p className="text-lg text-muted-foreground leading-relaxed font-medium">
-                          {event.description}
-                        </p>
+                        <div className="prose prose-sm dark:prose-invert prose-headings:font-black prose-headings:tracking-tight prose-a:text-primary max-w-none text-muted-foreground leading-relaxed font-medium">
+                          <ReactMarkdown>{event.description}</ReactMarkdown>
+                        </div>
                       </div>
                     </motion.div>
                   )}

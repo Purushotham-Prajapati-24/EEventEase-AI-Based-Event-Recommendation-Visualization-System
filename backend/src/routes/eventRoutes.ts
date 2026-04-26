@@ -8,7 +8,8 @@ import {
   getOrganizerEvents,
   removeUserFromEvent,
   reAddUserToEvent,
-  registerForEvent
+  registerForEvent,
+  closeEvent
 } from "../controllers/eventController";
 import { protect } from "../middleware/authMiddleware";
 
@@ -21,6 +22,7 @@ router.post("/", protect, createEvent);
 router.put("/:id", protect, updateEvent);
 router.delete("/:id", protect, deleteEvent);
 router.post("/:id/register", protect, registerForEvent);
+router.patch("/:id/close", protect, closeEvent);
 
 // Attendee Management
 router.post("/:eventId/remove/:userId", protect, removeUserFromEvent);

@@ -40,7 +40,7 @@ const initialState: AuthState = {
 export const checkAuth = createAsyncThunk("auth/checkAuth", async (_, thunkAPI) => {
   try {
     const token = await refreshAccessToken();
-    if (!token) throw new Error("Session expired");
+    if (!token) throw new Error("Failed to refresh token");
     return token;
   } catch (error: any) {
     return thunkAPI.rejectWithValue(error.message);
@@ -85,8 +85,12 @@ export const authSlice = createSlice({
       .addCase(checkAuth.rejected, (state) => {
         state.isLoading = false;
         state.isInitialized = true;
-        state.user = null;
-        localStorage.removeItem("user");
+        
+        // If localStorage user is gone (cleared by refreshAccessToken), sync state
+        const hasUser = localStorage.getItem("user");
+        if (!hasUser) {
+          state.user = null;
+        }
       })
       // Listen to follow/unfollow actions from profileSlice
       .addCase(followUser.fulfilled, (state, action) => {

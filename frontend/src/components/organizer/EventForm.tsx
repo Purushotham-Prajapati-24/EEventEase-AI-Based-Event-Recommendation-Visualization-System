@@ -168,8 +168,15 @@ export const EventForm = ({ onSuccess, onCancel }: EventFormProps) => {
                         />
                       </div>
                       {bannerUrlInput && (
-                        <div className="h-32 w-full rounded-2xl overflow-hidden border border-primary/10 shadow-inner">
-                          <img src={bannerUrlInput} alt="URL Preview" className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                        <div className="h-32 w-full rounded-2xl overflow-hidden border border-primary/10 shadow-inner bg-primary/5 flex items-center justify-center relative">
+                          <span className="text-xs text-muted-foreground absolute z-0 font-medium">Invalid or broken image URL</span>
+                          <img 
+                            key={bannerUrlInput}
+                            src={bannerUrlInput} 
+                            alt="URL Preview" 
+                            className="h-full w-full object-cover relative z-10" 
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} 
+                          />
                         </div>
                       )}
                     </div>

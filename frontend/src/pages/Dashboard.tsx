@@ -68,7 +68,7 @@ export const Dashboard = () => {
   const trendingData = useMemo(() => {
     const tagCounts: Record<string, number> = {};
     events.forEach(e => {
-      (e.tags || []).forEach(tag => {
+      (e.interests || []).forEach((tag: string) => {
         tagCounts[tag] = (tagCounts[tag] || 0) + 1;
       });
     });
@@ -145,6 +145,12 @@ export const Dashboard = () => {
           <CardContent className="h-64 pt-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={trendingData}>
+                <defs>
+                  <linearGradient id="colorBar" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#7C3AED" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#F97316" stopOpacity={0.8}/>
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                 <XAxis dataKey="name" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
                 <YAxis hide />
@@ -152,14 +158,7 @@ export const Dashboard = () => {
                   cursor={{ fill: 'var(--primary)', opacity: 0.1 }}
                   contentStyle={{ backgroundColor: 'var(--card)', borderRadius: '12px', border: '1px solid var(--primary)' }}
                 />
-                <Bar dataKey="count" fill="url(#colorBar)" radius={[10, 10, 0, 0]}>
-                  <defs>
-                    <linearGradient id="colorBar" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#7C3AED" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#F97316" stopOpacity={0.8}/>
-                    </linearGradient>
-                  </defs>
-                </Bar>
+                <Bar dataKey="count" fill="url(#colorBar)" radius={[10, 10, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -264,8 +263,8 @@ export const Dashboard = () => {
                 </CardHeader>
                 <CardContent className="flex-grow space-y-4">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground/90 italic font-medium line-clamp-2">
-                      "{rec.reason}"
+                    <p className="text-sm text-muted-foreground/90 font-medium line-clamp-3">
+                      {rec.reason}
                     </p>
                     <div className="flex flex-col items-end shrink-0">
                       <span className="text-[20px] font-black leading-none text-primary">{Math.round(rec.score)}%</span>

@@ -179,6 +179,11 @@ export const registerForEvent = async (req: Request, res: Response) => {
     event.registeredAttendees.push(userId as any);
     await event.save();
 
+    // Add event to User's registeredEvents
+    await import("../models/User").then(({ default: User }) => {
+      return User.findByIdAndUpdate(userId, { $addToSet: { registeredEvents: event._id } });
+    });
+
     // Add user to chat rooms
     if (event.discussionChat) {
       await Chat.findByIdAndUpdate(event.discussionChat, { $addToSet: { participants: userId } });
@@ -190,5 +195,23 @@ export const registerForEvent = async (req: Request, res: Response) => {
     res.status(200).json({ message: "Registered successfully", event });
   } catch (error) {
     res.status(500).json({ message: "Failed to register for event", error });
+  }
+};
+
+export const closeEvent = async (req: Request, res: Response) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ message: "Event not found" });
+
+    if (event.organizer.toString() !== (req as any).user.id && (req as any).user.role !== 'admin') {
+      return res.status(403).json({ message: "Not authorized to close this event" });
+    }
+
+    event.status = "completed";
+    await event.save();
+
+    res.status(200).json({ message: "Event closed successfully", event });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to close event", error });
   }
 };
