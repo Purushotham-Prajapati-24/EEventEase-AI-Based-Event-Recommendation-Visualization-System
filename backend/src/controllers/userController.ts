@@ -109,3 +109,20 @@ export const getSuggestedUsers = async (req: any, res: Response) => {
     res.status(500).json({ message: "Failed to get suggestions", error });
   }
 };
+
+export const getUserConnections = async (req: Request, res: Response) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .populate("followers", "name profileImage role")
+      .populate("following", "name profileImage role");
+      
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.status(200).json({
+      followers: user.followers,
+      following: user.following
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch connections", error });
+  }
+};

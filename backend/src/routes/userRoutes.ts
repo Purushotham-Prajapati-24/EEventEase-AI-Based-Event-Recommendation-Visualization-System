@@ -1,5 +1,5 @@
 import express from "express";
-import { getUsers, getUserById, createUser, updateProfile, followUser, unfollowUser, getSuggestedUsers } from "../controllers/userController";
+import { getUsers, getUserById, createUser, updateProfile, followUser, unfollowUser, getSuggestedUsers, getUserConnections } from "../controllers/userController";
 import { protect } from "../middleware/authMiddleware";
 
 const router = express.Router();
@@ -9,6 +9,7 @@ router.get("/suggestions", protect, getSuggestedUsers);
 
 router.get("/", getUsers);
 router.get("/:id", getUserById);
+router.get("/:id/connections", protect, getUserConnections);
 router.post("/", createUser);
 
 // Social & Profile Routes

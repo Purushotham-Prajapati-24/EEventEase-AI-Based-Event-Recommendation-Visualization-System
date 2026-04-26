@@ -15,6 +15,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { DotPattern } from "../components/ui/dot-pattern-1";
 import { ProfileEditModal } from "../components/ProfileEditModal";
+import { ConnectionsModal } from "../components/ConnectionsModal";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 const Profile = () => {
@@ -25,6 +26,7 @@ const Profile = () => {
   const { currentProfile, loading } = useSelector((state: RootState) => state.profile);
   const [activeTab, setActiveTab] = useState<"events" | "analytics" | "following">("events");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [connectionsModal, setConnectionsModal] = useState<{isOpen: boolean, type: "followers" | "following"}>({isOpen: false, type: "followers"});
   const [suggestions, setSuggestions] = useState<any[]>([]);
 
   const isOwnProfile = currentUser?._id === id;
@@ -114,11 +116,17 @@ const Profile = () => {
                 </div>
 
                 <div className="flex flex-col gap-4">
-                  <div className="flex items-center gap-3 text-sm font-medium">
+                  <div 
+                    className="flex items-center gap-3 text-sm font-medium cursor-pointer hover:text-primary transition-colors"
+                    onClick={() => setConnectionsModal({ isOpen: true, type: "followers" })}
+                  >
                     <Users className="h-4 w-4 text-primary" />
                     <span>{currentProfile.followers?.length || 0} Followers</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm font-medium">
+                  <div 
+                    className="flex items-center gap-3 text-sm font-medium cursor-pointer hover:text-secondary transition-colors"
+                    onClick={() => setConnectionsModal({ isOpen: true, type: "following" })}
+                  >
                     <UserPlus className="h-4 w-4 text-secondary" />
                     <span>{currentProfile.following?.length || 0} Following</span>
                   </div>
@@ -336,6 +344,13 @@ const Profile = () => {
           <ProfileEditModal 
             user={currentProfile} 
             onClose={() => setIsEditModalOpen(false)} 
+          />
+        )}
+        {connectionsModal.isOpen && (
+          <ConnectionsModal 
+            userId={currentProfile._id} 
+            type={connectionsModal.type} 
+            onClose={() => setConnectionsModal({ ...connectionsModal, isOpen: false })} 
           />
         )}
       </AnimatePresence>

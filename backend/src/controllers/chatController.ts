@@ -76,3 +76,25 @@ export const fetchMessages = async (req: Request, res: Response) => {
     res.status(400).json({ message: "Failed to fetch messages", error });
   }
 };
+
+export const getChatById = async (req: Request, res: Response) => {
+  try {
+    const chat = await Chat.findById(req.params.chatId)
+      .populate("participants", "-passwordHash")
+      .populate("groupAdmin", "-passwordHash")
+      .populate("lastMessage");
+
+    if (!chat) {
+      return res.status(404).json({ message: "Chat not found" });
+    }
+
+    const fullChat = await User.populate(chat, {
+      path: "lastMessage.sender",
+      select: "name profileImage email",
+    });
+
+    res.status(200).json(fullChat);
+  } catch (error) {
+    res.status(400).json({ message: "Failed to get chat", error });
+  }
+};

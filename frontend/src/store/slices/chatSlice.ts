@@ -29,6 +29,11 @@ export const accessChat = createAsyncThunk("chat/accessChat", async (userId: str
   return await api.post("/chats", { userId });
 });
 
+export const fetchChatById = createAsyncThunk("chat/fetchChatById", async (chatId: string) => {
+  return await api.get(`/chats/${chatId}`);
+});
+
+
 const chatSlice = createSlice({
   name: "chat",
   initialState,
@@ -70,6 +75,11 @@ const chatSlice = createSlice({
         state.messages = Array.isArray(action.payload) ? action.payload : [];
       })
       .addCase(accessChat.fulfilled, (state, action) => {
+        const exists = state.chats.find((c) => c._id === action.payload._id);
+        if (!exists) state.chats.unshift(action.payload);
+        state.activeChat = action.payload;
+      })
+      .addCase(fetchChatById.fulfilled, (state, action) => {
         const exists = state.chats.find((c) => c._id === action.payload._id);
         if (!exists) state.chats.unshift(action.payload);
         state.activeChat = action.payload;

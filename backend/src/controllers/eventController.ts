@@ -175,6 +175,14 @@ export const registerForEvent = async (req: Request, res: Response) => {
     event.registeredAttendees.push(userId as any);
     await event.save();
 
+    // Add user to chat rooms
+    if (event.discussionChat) {
+      await Chat.findByIdAndUpdate(event.discussionChat, { $addToSet: { participants: userId } });
+    }
+    if (event.announcementChat) {
+      await Chat.findByIdAndUpdate(event.announcementChat, { $addToSet: { participants: userId } });
+    }
+
     res.status(200).json({ message: "Registered successfully", event });
   } catch (error) {
     res.status(500).json({ message: "Failed to register for event", error });

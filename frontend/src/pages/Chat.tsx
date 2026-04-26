@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useLocation } from "react-router-dom";
 import type { RootState, AppDispatch } from "../store";
-import { fetchChats, fetchMessages, setActiveChat, addMessage } from "../store/slices/chatSlice";
+import { fetchChats, fetchMessages, setActiveChat, addMessage, fetchChatById } from "../store/slices/chatSlice";
 import { Button } from "../components/ui/button";
 import { 
   Send, 
@@ -15,7 +15,6 @@ import {
   MessageSquare
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLocation } from "react-router-dom";
 import { io, Socket } from "socket.io-client";
 
 const Chat = () => {
@@ -67,24 +66,52 @@ const Chat = () => {
     };
 
     socket.on("message recieved", handleNewMessage);
+    
+    socket.on("message-read", (data: { messageId: string, userId: string, readAt: Date }) => {
+      // Find and update the specific message's readBy array in local state
+      dispatch({ type: 'chat/updateMessageReadBy', payload: data });
+    });
 
     return () => {
       socket.off("message recieved", handleNewMessage);
+      socket.off("message-read");
     };
   }, [socket, activeChat, dispatch]);
+
+  // Mark messages as read when active chat changes or new messages arrive
+  useEffect(() => {
+    if (socket && activeChat && messages.length > 0 && user) {
+      const unreadMessages = messages.filter(
+        (msg: any) => msg.sender?._id !== user._id && !msg.readBy?.some((r: any) => (r.user?._id || r.user) === user._id)
+      );
+
+      unreadMessages.forEach((msg: any) => {
+        socket.emit("mark-as-read", {
+          messageId: msg._id,
+          userId: user._id,
+          chatId: activeChat._id,
+        });
+      });
+    }
+  }, [socket, activeChat, messages, user]);
 
   // Auto-select chat from query param
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const roomId = params.get("room");
-    if (roomId && chats.length > 0) {
+    if (roomId) {
       const chat = chats.find((c) => c._id === roomId);
       if (chat) {
         dispatch(setActiveChat(chat));
         dispatch(fetchMessages(chat._id));
+      } else if (!loading) {
+        // Fetch specific chat if not in list
+        dispatch(fetchChatById(roomId)).then(() => {
+          dispatch(fetchMessages(roomId));
+        });
       }
     }
-  }, [location.search, chats, dispatch]);
+  }, [location.search, chats, loading, dispatch]);
 
   // Fetch chats on mount
   useEffect(() => {
