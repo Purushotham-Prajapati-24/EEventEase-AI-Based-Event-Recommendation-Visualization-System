@@ -6,8 +6,9 @@ import Chat from "./models/Chat";
 export const initSocket = (httpServer: HttpServer) => {
   const io = new Server(httpServer, {
     cors: {
-      origin: "*", // Adjust in production
+      origin: "http://localhost:5173",
       methods: ["GET", "POST"],
+      credentials: true,
     },
   });
 

@@ -25,14 +25,14 @@ export const getPersonalizedRecommendations = async (req: Request, res: Response
         
         return {
           event,
-          matchScore: aiResult.matchScore,
-          explanation: aiResult.explanation,
+          score: aiResult.matchScore,
+          reason: aiResult.explanation,
         };
       })
     );
 
-    // Sort by match score descending
-    recommendations.sort((a, b) => b.matchScore - a.matchScore);
+    // Sort by score descending
+    recommendations.sort((a, b) => b.score - a.score);
 
     res.status(200).json(recommendations);
   } catch (error) {

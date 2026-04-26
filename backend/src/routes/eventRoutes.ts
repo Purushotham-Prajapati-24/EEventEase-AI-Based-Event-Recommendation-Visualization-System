@@ -7,7 +7,8 @@ import {
   deleteEvent, 
   getOrganizerEvents,
   removeUserFromEvent,
-  reAddUserToEvent
+  reAddUserToEvent,
+  registerForEvent
 } from "../controllers/eventController";
 import { protect } from "../middleware/authMiddleware";
 
@@ -19,6 +20,7 @@ router.get("/:id", getEventById);
 router.post("/", protect, createEvent);
 router.put("/:id", protect, updateEvent);
 router.delete("/:id", protect, deleteEvent);
+router.post("/:id/register", protect, registerForEvent);
 
 // Attendee Management
 router.post("/:eventId/remove/:userId", protect, removeUserFromEvent);

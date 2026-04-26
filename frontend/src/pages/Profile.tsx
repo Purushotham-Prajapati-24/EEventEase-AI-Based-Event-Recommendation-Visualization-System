@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { RootState, AppDispatch } from "../store";
+import type { RootState, AppDispatch } from "../store";
 import { fetchProfile, followUser, clearProfile } from "../store/slices/profileSlice";
 import { Button } from "../components/ui/button";
 import { 
@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DotPattern } from "../components/ui/dot-pattern-1";
+import { ProfileEditModal } from "../components/ProfileEditModal";
 
 const Profile = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,8 +24,9 @@ const Profile = () => {
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const { currentProfile, loading } = useSelector((state: RootState) => state.profile);
   const [activeTab, setActiveTab] = useState<"events" | "analytics" | "following">("events");
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const isOwnProfile = currentUser?.id === id;
+  const isOwnProfile = currentUser?._id === id;
 
   useEffect(() => {
     if (id) {
@@ -74,7 +76,7 @@ const Profile = () => {
 
               <div className="flex gap-4 mb-2">
                 {isOwnProfile ? (
-                  <Button variant="outline" className="rounded-2xl gap-2">
+                  <Button variant="outline" className="rounded-2xl gap-2" onClick={() => setIsEditModalOpen(true)}>
                     <Edit3 className="h-4 w-4" /> Edit Profile
                   </Button>
                 ) : (
@@ -114,6 +116,34 @@ const Profile = () => {
                   <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
                     <Calendar className="h-4 w-4" />
                     <span>Joined {new Date(currentProfile.createdAt).toLocaleDateString()}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Interests</h3>
+                    {isOwnProfile && (
+                      <button 
+                        onClick={() => setIsEditModalOpen(true)}
+                        className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest"
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {currentProfile.interests && currentProfile.interests.length > 0 ? (
+                      currentProfile.interests.map((interest: string) => (
+                        <span 
+                          key={interest}
+                          className="px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-black text-primary uppercase tracking-widest"
+                        >
+                          {interest}
+                        </span>
+                      ))
+                    ) : (
+                      <p className="text-xs italic text-muted-foreground">No interests listed yet.</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -176,7 +206,7 @@ const Profile = () => {
                       )}
                     </div>
                   )}
-
+                  
                   {activeTab === "analytics" && (
                     <div className="space-y-8">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -213,6 +243,15 @@ const Profile = () => {
           </div>
         </div>
       </section>
+    
+      <AnimatePresence>
+        {isEditModalOpen && (
+          <ProfileEditModal 
+            user={currentProfile} 
+            onClose={() => setIsEditModalOpen(false)} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

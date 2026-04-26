@@ -109,3 +109,34 @@ export const reAddUserToEvent = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Failed to re-add user", error });
   }
 };
+
+export const registerForEvent = async (req: Request, res: Response) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    const userId = (req as any).user.id;
+
+    if (!event) return res.status(404).json({ message: "Event not found" });
+
+    // Check if blacklisted
+    if (event.blacklistedUsers.includes(userId as any)) {
+      return res.status(403).json({ message: "You are blacklisted from this event" });
+    }
+
+    // Check if already registered
+    if (event.registeredAttendees.includes(userId as any)) {
+      return res.status(400).json({ message: "Already registered" });
+    }
+
+    // Check capacity
+    if (event.registeredAttendees.length >= event.capacity) {
+      return res.status(400).json({ message: "Event is full" });
+    }
+
+    event.registeredAttendees.push(userId as any);
+    await event.save();
+
+    res.status(200).json({ message: "Registered successfully", event });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to register for event", error });
+  }
+};

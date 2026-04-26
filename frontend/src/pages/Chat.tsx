@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { RootState, AppDispatch } from "../store";
+import type { RootState, AppDispatch } from "../store";
 import { fetchChats, fetchMessages, setActiveChat, addMessage } from "../store/slices/chatSlice";
 import { Button } from "../components/ui/button";
 import { 
@@ -38,7 +38,7 @@ const Chat = () => {
 
   useEffect(() => {
     if (socket && user) {
-      socket.emit("setup", user.id);
+      socket.emit("setup", user._id);
     }
   }, [socket, user]);
 
@@ -60,7 +60,7 @@ const Chat = () => {
     if (newMessage.trim() && socket && activeChat) {
       const messageData = {
         chatId: activeChat._id,
-        senderId: user?.id,
+        senderId: user?._id,
         content: newMessage,
       };
       
@@ -110,7 +110,7 @@ const Chat = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-start">
                     <h4 className="font-bold truncate">
-                      {chat.participants.find((p: any) => p._id !== user?.id)?.name || chat.groupName}
+                      {chat.participants.find((p: any) => p._id !== user?._id)?.name || chat.groupName}
                     </h4>
                     <span className={`text-[10px] ${activeChat?._id === chat._id ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
                       12:45
@@ -165,10 +165,10 @@ const Chat = () => {
                     key={msg._id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className={`flex ${msg.sender._id === user?.id ? "justify-end" : "justify-start"}`}
+                    className={`flex ${msg.sender._id === user?._id ? "justify-end" : "justify-start"}`}
                   >
-                    <div className={`max-w-[70%] space-y-1 ${msg.sender._id === user?.id ? "items-end" : "items-start"}`}>
-                      <div className={`px-4 py-2 rounded-2xl text-sm ${msg.sender._id === user?.id ? "bg-primary text-primary-foreground rounded-tr-none" : "glass rounded-tl-none"}`}>
+                    <div className={`max-w-[70%] space-y-1 ${msg.sender._id === user?._id ? "items-end" : "items-start"}`}>
+                      <div className={`px-4 py-2 rounded-2xl text-sm ${msg.sender._id === user?._id ? "bg-primary text-primary-foreground rounded-tr-none" : "glass rounded-tl-none"}`}>
                         {msg.content}
                       </div>
                       <div className="flex items-center gap-1 px-1">

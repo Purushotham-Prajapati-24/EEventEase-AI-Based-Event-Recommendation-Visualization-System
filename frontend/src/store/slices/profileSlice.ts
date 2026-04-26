@@ -18,13 +18,22 @@ const initialState: ProfileState = {
 };
 
 export const fetchProfile = createAsyncThunk("profile/fetchProfile", async (userId: string) => {
-  const response = await api.get(`/users/${userId}`);
-  return response.data;
+  return await api.get(`/users/${userId}`);
 });
 
+export const updateProfile = createAsyncThunk(
+  "profile/updateProfile", 
+  async ({ userId, data }: { userId: string, data: any }) => {
+    return await api.put(`/users/${userId}`, data);
+  }
+);
+
 export const followUser = createAsyncThunk("profile/followUser", async (userId: string) => {
-  const response = await api.post(`/users/${userId}/follow`);
-  return response.data;
+  return await api.post(`/users/${userId}/follow`);
+});
+
+export const unfollowUser = createAsyncThunk("profile/unfollowUser", async (userId: string) => {
+  return await api.post(`/users/${userId}/unfollow`);
 });
 
 const profileSlice = createSlice({
@@ -43,6 +52,15 @@ const profileSlice = createSlice({
       .addCase(fetchProfile.fulfilled, (state, action) => {
         state.loading = false;
         state.currentProfile = action.payload;
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.currentProfile = action.payload;
+      })
+      .addCase(followUser.fulfilled, (state, action) => {
+        // Optimistic UI or refetch? Let's assume refetch or manual update
+        if (state.currentProfile) {
+          // Update followers locally if needed
+        }
       });
   },
 });

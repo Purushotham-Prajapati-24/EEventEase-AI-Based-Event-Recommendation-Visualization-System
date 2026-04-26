@@ -5,13 +5,16 @@ export interface Event {
   _id: string;
   title: string;
   description: string;
-  organizer: string;
+  organizer: any;
   date: string;
   location: string;
   tags: string[];
   capacity: number;
   registeredAttendees: string[];
   status: "upcoming" | "ongoing" | "completed" | "cancelled";
+  posterUrl?: string;
+  discussionChat?: string;
+  announcementChat?: string;
 }
 
 interface EventsState {
@@ -41,6 +44,14 @@ export const getEvents = createAsyncThunk("events/getAll", async (_, thunkAPI) =
 export const getEvent = createAsyncThunk("events/getOne", async (id: string, thunkAPI) => {
   try {
     return await fetchWithAuth(`/api/events/${id}`);
+  } catch (error: any) {
+    return thunkAPI.rejectWithValue(error.message);
+  }
+});
+
+export const registerForEvent = createAsyncThunk("events/register", async (id: string, thunkAPI) => {
+  try {
+    return await fetchWithAuth(`/api/events/${id}/register`, { method: "POST" });
   } catch (error: any) {
     return thunkAPI.rejectWithValue(error.message);
   }
@@ -78,6 +89,19 @@ export const eventsSlice = createSlice({
         state.event = action.payload;
       })
       .addCase(getEvent.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload as string;
+      })
+      .addCase(registerForEvent.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(registerForEvent.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.event = action.payload.event;
+        state.message = action.payload.message;
+      })
+      .addCase(registerForEvent.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload as string;

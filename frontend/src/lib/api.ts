@@ -1,14 +1,39 @@
-export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-  const userStr = localStorage.getItem("user");
-  const user = userStr ? JSON.parse(userStr) : null;
+let accessToken: string | null = null;
 
+export const setAccessToken = (token: string | null) => {
+  accessToken = token;
+};
+
+const refreshAccessToken = async () => {
+  try {
+    const response = await fetch("/api/auth/refresh", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      // Important: include credentials to send/receive cookies
+      credentials: "include",
+    });
+
+    if (!response.ok) throw new Error("Refresh failed");
+
+    const data = await response.json();
+    setAccessToken(data.token);
+    return data.token;
+  } catch (error) {
+    setAccessToken(null);
+    localStorage.removeItem("user");
+    window.location.href = "/login";
+    return null;
+  }
+};
+
+export const fetchWithAuth = async (url: string, options: RequestInit = {}, isRetry = false): Promise<any> => {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string> || {}),
   };
 
-  if (user && user.token) {
-    headers["Authorization"] = `Bearer ${user.token}`;
+  if (accessToken) {
+    headers["Authorization"] = `Bearer ${accessToken}`;
   }
 
   const fullUrl = url.startsWith("/api") ? url : `/api${url}`;
@@ -16,7 +41,16 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
   const response = await fetch(fullUrl, {
     ...options,
     headers,
+    credentials: "include", // Send HttpOnly cookies
   });
+
+  if (response.status === 401 && !isRetry && url !== "/api/auth/login") {
+    // Attempt refresh
+    const newToken = await refreshAccessToken();
+    if (newToken) {
+      return fetchWithAuth(url, options, true);
+    }
+  }
 
   const contentType = response.headers.get("content-type");
   const isJson = contentType && contentType.includes("application/json");
@@ -29,13 +63,11 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
       data = { message: "Invalid server response" };
     }
   } else {
-    // If not JSON, it's likely an HTML error page or raw text
     const text = await response.text();
     data = { message: text.includes("Cannot POST") ? "Endpoint not found" : "Server error" };
   }
 
   if (!response.ok) {
-    // Return a clean message, never raw HTML
     throw new Error(data.message || "An unexpected error occurred");
   }
 

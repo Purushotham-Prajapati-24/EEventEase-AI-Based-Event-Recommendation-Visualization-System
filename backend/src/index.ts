@@ -9,9 +9,12 @@ import recommendationRoutes from "./routes/recommendationRoutes";
 import authRoutes from "./routes/authRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 import chatRoutes from "./routes/chatRoutes";
+import imagekitRoutes from "./routes/imagekitRoutes";
 
 import { createServer } from "http";
 import { initSocket } from "./socket";
+
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
@@ -24,7 +27,13 @@ initSocket(server);
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5173"], // Add other origins if needed
+    credentials: true,
+  })
+);
+app.use(cookieParser());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
@@ -38,6 +47,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/recommendations", recommendationRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/chats", chatRoutes);
+app.use("/api/imagekit", imagekitRoutes);
 
 // Basic Route
 app.get("/", (req, res) => {

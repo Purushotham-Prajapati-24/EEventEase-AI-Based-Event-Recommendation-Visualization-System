@@ -3,11 +3,17 @@ import Notification from "../models/Notification";
 
 export const getNotifications = async (req: Request, res: Response) => {
   try {
-    const notifications = await Notification.find({ recipient: (req as any).user.id })
+    const userId = (req as any).user.id;
+    console.log("Fetching notifications for user:", userId);
+    
+    const notifications = await Notification.find({ recipient: userId })
       .populate("sender", "name")
       .sort({ createdAt: -1 });
+      
+    console.log(`Found ${notifications.length} notifications`);
     res.status(200).json(notifications);
   } catch (error) {
+    console.error("Error in getNotifications:", error);
     res.status(500).json({ message: "Failed to fetch notifications", error });
   }
 };

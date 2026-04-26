@@ -1,5 +1,5 @@
-import { createSlice } from "@reduxjs/toolkit";
-import type { PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { setAccessToken } from "@/lib/api";
 
 interface User {
   _id: string;
@@ -7,11 +7,11 @@ interface User {
   email: string;
   role: string;
   interests?: string[];
-  token: string;
+  token?: string; // Optional during transit
 }
 
 interface AuthState {
-  user: User | null;
+  user: Omit<User, "token"> | null;
   isLoading: boolean;
   isError: boolean;
   isSuccess: boolean;
@@ -20,7 +20,7 @@ interface AuthState {
 
 // Get user from localStorage
 const userStr = localStorage.getItem("user");
-const user: User | null = userStr ? JSON.parse(userStr) : null;
+const user: Omit<User, "token"> | null = userStr ? JSON.parse(userStr) : null;
 
 const initialState: AuthState = {
   user: user,
@@ -41,11 +41,14 @@ export const authSlice = createSlice({
       state.message = "";
     },
     setUser: (state, action: PayloadAction<User>) => {
-      state.user = action.payload;
-      localStorage.setItem("user", JSON.stringify(action.payload));
+      const { token, ...userData } = action.payload;
+      if (token) setAccessToken(token);
+      state.user = userData;
+      localStorage.setItem("user", JSON.stringify(userData));
     },
     logout: (state) => {
       state.user = null;
+      setAccessToken(null);
       localStorage.removeItem("user");
     },
   },

@@ -75,16 +75,25 @@ export const Discovery = () => {
           
           <div ref={horizontalRef} className="flex gap-10 px-8 w-fit">
             {recommendations.map((rec) => (
-              <Card key={rec.event._id} className="flex-shrink-0 w-[450px] flex flex-col h-full glass border-primary/30 shadow-2xl hover:border-primary transition-all group">
-                <CardHeader className="p-8">
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-primary px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20">
-                      AI Matching System
-                    </span>
-                    <span className="text-sm font-bold text-muted-foreground">
+              <Card key={rec.event._id} className="flex-shrink-0 w-[450px] flex flex-col h-full glass border-primary/30 shadow-2xl hover:border-primary transition-all group overflow-hidden">
+                <div className="h-48 w-full overflow-hidden relative">
+                  {rec.event.posterUrl ? (
+                    <img src={rec.event.posterUrl} alt={rec.event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  ) : (
+                    <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                      <Target className="h-10 w-10 text-primary/20" />
+                    </div>
+                  )}
+                  <div className="absolute top-4 right-4 z-20">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-primary px-4 py-1.5 rounded-full bg-background/80 backdrop-blur-md border border-primary/20">
                       {Math.floor(rec.score)}% Sync
                     </span>
                   </div>
+                </div>
+                <CardHeader className="p-8 pb-4">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-primary/60 mb-2 block">
+                    AI Analysis
+                  </span>
                   <CardTitle className="text-3xl font-black group-hover:text-primary transition-colors">
                     {rec.event.title}
                   </CardTitle>
@@ -122,7 +131,16 @@ export const Discovery = () => {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           {events.map((event) => (
-            <Card key={event._id} className="flex flex-col h-full glass border-border/50 hover:border-primary/50 transition-all group shadow-xl hover:-translate-y-2 duration-300">
+            <Card key={event._id} className="flex flex-col h-full glass border-border/50 hover:border-primary/50 transition-all group shadow-xl hover:-translate-y-2 duration-300 overflow-hidden">
+              <div className="h-48 w-full overflow-hidden">
+                {event.posterUrl ? (
+                  <img src={event.posterUrl} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                ) : (
+                  <div className="w-full h-full bg-secondary/10 flex items-center justify-center">
+                    <span className="text-4xl font-black opacity-10 italic">{event.title[0]}</span>
+                  </div>
+                )}
+              </div>
               <CardHeader className="p-8">
                 <CardTitle className="text-2xl font-black group-hover:text-primary transition-colors">
                   {event.title}

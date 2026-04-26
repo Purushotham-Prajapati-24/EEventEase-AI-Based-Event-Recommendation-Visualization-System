@@ -1,6 +1,11 @@
-import { MessageSquare, Megaphone, Info, CheckCircle, Bell } from "lucide-react";
+import { MessageSquare, Megaphone, Info, CheckCircle, Bell, CalendarIcon, MapPinIcon, UsersIcon, ArrowLeftIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "@/store";
+import { getEvent, registerForEvent } from "@/store/slices/eventsSlice";
+import { Button } from "@/components/ui/button";
 
 export const EventDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -8,12 +13,26 @@ export const EventDetails = () => {
   const { event, isLoading, isError, message } = useSelector((state: RootState) => state.events);
   const { user } = useSelector((state: RootState) => state.auth);
   const [activeTab, setActiveTab] = useState<"info" | "discussion" | "announcements">("info");
+  const [isRegistering, setIsRegistering] = useState(false);
 
   useEffect(() => {
     if (id) {
       dispatch(getEvent(id));
     }
   }, [dispatch, id]);
+
+  useEffect(() => {
+    if (event) {
+      document.title = `${event.title} | EventEase`;
+    }
+  }, [event]);
+
+  const handleRegister = async () => {
+    if (!id) return;
+    setIsRegistering(true);
+    await dispatch(registerForEvent(id));
+    setIsRegistering(false);
+  };
 
   if (isLoading) return (
     <div className="min-h-screen flex items-center justify-center">
@@ -25,8 +44,8 @@ export const EventDetails = () => {
   if (!event) return <div className="p-8 text-center">Event not found.</div>;
 
   const isRegistered = user && event.registeredAttendees?.includes(user._id);
-  const isFull = event.registeredAttendees?.length >= event.capacity;
-  const isOrganizer = user && event.organizer?._id === user.id;
+  const isFull = (event.registeredAttendees?.length || 0) >= event.capacity;
+  const isOrganizer = user && event.organizer?._id === user._id;
 
   return (
     <div className="min-h-screen bg-background pt-24 pb-20 px-8">
@@ -52,9 +71,9 @@ export const EventDetails = () => {
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-secondary/20 flex items-center justify-center">
-                    <h1 className="text-5xl md:text-6xl font-black text-foreground tracking-tighter text-center px-4 italic opacity-20">
+                    <div className="text-5xl md:text-6xl font-black text-foreground tracking-tighter text-center px-4 italic opacity-20">
                       {event.title}
-                    </h1>
+                    </div>
                   </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent flex items-end p-12">
@@ -219,8 +238,12 @@ export const EventDetails = () => {
                     Registration Full
                   </Button>
                 ) : (
-                  <Button className="w-full h-16 rounded-[24px] text-lg font-black tracking-tighter shadow-xl shadow-primary/20">
-                    Secure My Spot
+                  <Button 
+                    className="w-full h-16 rounded-[24px] text-lg font-black tracking-tighter shadow-xl shadow-primary/20"
+                    onClick={handleRegister}
+                    disabled={isRegistering}
+                  >
+                    {isRegistering ? "Securing..." : "Secure My Spot"}
                   </Button>
                 )}
               </div>

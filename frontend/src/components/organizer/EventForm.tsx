@@ -8,6 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ImagePlus, X, Calendar, MapPin, Users as UsersIcon, FileText } from "lucide-react";
 import api from "@/lib/api";
+import { uploadImage } from "@/lib/imagekit";
 
 const eventSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -56,19 +57,19 @@ export const EventForm = ({ onSuccess, onCancel }: EventFormProps) => {
     }
   };
 
-  // Placeholder for ImageKit upload logic
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setIsUploading(true);
-      // In a real scenario, you'd upload to ImageKit here
-      // For now, we simulate a delay and use a local preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPosterUrl(reader.result as string);
+      try {
+        setIsUploading(true);
+        setError(null);
+        const url = await uploadImage(file);
+        setPosterUrl(url);
+      } catch (err: any) {
+        setError("Failed to upload image. Please try again.");
+      } finally {
         setIsUploading(false);
-      };
-      reader.readAsDataURL(file);
+      }
     }
   };
 
