@@ -2,11 +2,15 @@ import { Server } from "socket.io";
 import { Server as HttpServer } from "http";
 import Message from "./models/Message";
 import Chat from "./models/Chat";
+import Notification from "./models/Notification";
 
 export const initSocket = (httpServer: HttpServer) => {
   const io = new Server(httpServer, {
     cors: {
-      origin: "http://localhost:5173",
+      origin: [
+        "http://localhost:5173",
+        process.env.FRONTEND_URL || ""
+      ].filter(Boolean),
       methods: ["GET", "POST"],
       credentials: true,
     },
@@ -67,6 +71,26 @@ export const initSocket = (httpServer: HttpServer) => {
         socket.to(chatId).emit("message recieved", populated);
         // Also send back to sender with populated data so their message appears
         socket.emit("message recieved", populated);
+
+        // If it's an announcement, notify everyone
+        if (chat.isGroupChat && chat.groupName?.includes("Announcements")) {
+          const participantsToNotify = chat.participants.filter(p => p.toString() !== senderId);
+          
+          await Promise.all(participantsToNotify.map(participantId => 
+            Notification.create({
+              recipient: participantId,
+              sender: senderId,
+              type: "announcement",
+              message: `New announcement in ${chat.groupName?.split(" - ")[0] || "Event"}`,
+              link: `/chat?room=${chatId}`
+            })
+          ));
+
+          // Trigger a notification sync for all participants
+          participantsToNotify.forEach(pId => {
+            io.to(pId.toString()).emit("new-notification");
+          });
+        }
       } catch (error) {
         console.error("Error sending message:", error);
       }

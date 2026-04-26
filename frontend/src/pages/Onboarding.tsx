@@ -111,47 +111,75 @@ const Onboarding = () => {
         {step === 1 && (
           <div className="space-y-10 relative z-10">
             <div className="text-center space-y-4">
-              <div className="h-20 w-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
-                <Target className="h-10 w-10 text-primary" />
+              <div className="h-20 w-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto shadow-inner group transition-all hover:bg-primary/20">
+                <Target className="h-10 w-10 text-primary group-hover:scale-110 transition-transform" />
               </div>
               <h2 className="text-4xl font-black tracking-tighter">What are you into?</h2>
               <p className="text-muted-foreground font-medium text-lg leading-relaxed px-8">
-                Pick your interests so we can match you with the right events and people.
+                Select your interests. Our AI uses these to curate a <span className="text-primary font-bold">personalized event feed</span> just for you.
               </p>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-3">
-              {INTEREST_OPTIONS.map((interest) => (
-                <motion.button
-                  key={interest}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => toggleInterest(interest)}
-                  className={`px-6 py-3 rounded-full text-sm font-black transition-all border-2 flex items-center gap-2 ${
-                    selected.includes(interest)
-                      ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/30"
-                      : "bg-background/50 border-primary/10 hover:border-primary/30"
-                  }`}
-                >
-                  {selected.includes(interest) && <Check className="h-3.5 w-3.5" />}
-                  {interest}
-                </motion.button>
-              ))}
+            <div className="space-y-6">
+              {/* Premium Multi-select Dropdown */}
+              <div className="relative space-y-4">
+                <div className="flex flex-wrap gap-2 p-4 min-h-[64px] rounded-3xl border-2 border-primary/10 bg-primary/5 focus-within:border-primary transition-all">
+                  <AnimatePresence>
+                    {selected.map((item) => (
+                      <motion.span
+                        key={item}
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.8, opacity: 0 }}
+                        className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20"
+                      >
+                        {item}
+                        <button onClick={() => toggleInterest(item)} className="hover:text-white/80 transition-colors">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </motion.span>
+                    ))}
+                  </AnimatePresence>
+                  {selected.length === 0 && (
+                    <span className="text-muted-foreground font-medium self-center px-2 italic">Select interests below...</span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 h-[240px] overflow-y-auto pr-2 custom-scrollbar p-1">
+                  {INTEREST_OPTIONS.map((interest) => {
+                    const isSelected = selected.includes(interest);
+                    return (
+                      <button
+                        key={interest}
+                        onClick={() => toggleInterest(interest)}
+                        className={`flex items-center justify-between px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
+                          isSelected 
+                            ? "bg-primary/10 border-primary text-primary" 
+                            : "bg-background/50 border-primary/5 hover:border-primary/20 text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {interest}
+                        {isSelected && <Check className="h-3 w-3" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 pt-4 border-t border-primary/10">
               <Button
                 onClick={handleInterestsNext}
                 disabled={selected.length === 0 || isSubmitting}
-                className="w-full h-14 rounded-3xl text-base font-black tracking-tighter shadow-xl shadow-primary/20"
+                className="w-full h-14 rounded-3xl text-base font-black tracking-tighter shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform active:scale-[0.98]"
               >
                 {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : (
-                  <span className="flex items-center gap-2">Continue <ArrowRight className="h-5 w-5" /></span>
+                  <span className="flex items-center gap-2">Continue to Profile <ArrowRight className="h-5 w-5" /></span>
                 )}
               </Button>
               <button
                 onClick={handleSkipAll}
-                className="w-full text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
+                className="w-full text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors"
               >
                 Skip for now
               </button>

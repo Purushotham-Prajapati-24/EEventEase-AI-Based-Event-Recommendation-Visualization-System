@@ -1,12 +1,17 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import { setAccessToken } from "@/lib/api";
+import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit";
+import { setAccessToken, refreshAccessToken } from "@/lib/api";
+import { followUser, unfollowUser } from "./profileSlice";
 
 interface User {
   _id: string;
   name: string;
   email: string;
   role: string;
+  profileImage?: string;
+  bio?: string;
   interests?: string[];
+  followers?: string[];
+  following?: string[];
   token?: string; // Optional during transit
 }
 
@@ -16,6 +21,7 @@ interface AuthState {
   isError: boolean;
   isSuccess: boolean;
   message: string;
+  isInitialized: boolean;
 }
 
 // Get user from localStorage
@@ -28,7 +34,18 @@ const initialState: AuthState = {
   isError: false,
   isSuccess: false,
   message: "",
+  isInitialized: false,
 };
+
+export const checkAuth = createAsyncThunk("auth/checkAuth", async (_, thunkAPI) => {
+  try {
+    const token = await refreshAccessToken();
+    if (!token) throw new Error("Session expired");
+    return token;
+  } catch (error: any) {
+    return thunkAPI.rejectWithValue(error.message);
+  }
+});
 
 export const authSlice = createSlice({
   name: "auth",
@@ -51,8 +68,46 @@ export const authSlice = createSlice({
       setAccessToken(null);
       localStorage.removeItem("user");
     },
+    setInitialized: (state) => {
+      state.isInitialized = true;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(checkAuth.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(checkAuth.fulfilled, (state) => {
+        state.isLoading = false;
+        state.isInitialized = true;
+        state.isSuccess = true;
+      })
+      .addCase(checkAuth.rejected, (state) => {
+        state.isLoading = false;
+        state.isInitialized = true;
+        state.user = null;
+        localStorage.removeItem("user");
+      })
+      // Listen to follow/unfollow actions from profileSlice
+      .addCase(followUser.fulfilled, (state, action) => {
+        const { targetId } = action.payload;
+        if (state.user) {
+          if (!state.user.following) state.user.following = [];
+          if (!state.user.following.includes(targetId)) {
+            state.user.following.push(targetId);
+            localStorage.setItem("user", JSON.stringify(state.user));
+          }
+        }
+      })
+      .addCase(unfollowUser.fulfilled, (state, action) => {
+        const { targetId } = action.payload;
+        if (state.user && state.user.following) {
+          state.user.following = state.user.following.filter(id => id !== targetId);
+          localStorage.setItem("user", JSON.stringify(state.user));
+        }
+      });
   },
 });
 
-export const { reset, setUser, logout } = authSlice.actions;
+export const { reset, setUser, logout, setInitialized } = authSlice.actions;
 export default authSlice.reducer;

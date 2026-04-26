@@ -6,6 +6,7 @@ interface ChatState {
   messages: any[];
   activeChat: any | null;
   loading: boolean;
+  messagesLoading: boolean;
   error: string | null;
 }
 
@@ -14,6 +15,7 @@ const initialState: ChatState = {
   messages: [],
   activeChat: null,
   loading: false,
+  messagesLoading: false,
   error: null,
 };
 
@@ -82,9 +84,12 @@ const chatSlice = createSlice({
         state.loading = false;
         state.error = "Failed to fetch chats";
       })
+      .addCase(fetchMessages.pending, (state) => { state.messagesLoading = true; })
       .addCase(fetchMessages.fulfilled, (state, action) => {
+        state.messagesLoading = false;
         state.messages = Array.isArray(action.payload) ? action.payload : [];
       })
+      .addCase(fetchMessages.rejected, (state) => { state.messagesLoading = false; })
       .addCase(accessChat.fulfilled, (state, action) => {
         const exists = state.chats.find((c) => c._id === action.payload._id);
         if (!exists) state.chats.unshift(action.payload);

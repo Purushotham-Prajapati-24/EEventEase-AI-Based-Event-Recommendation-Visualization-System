@@ -5,7 +5,14 @@ import type { Event } from "./eventsSlice";
 interface Recommendation {
   event: Event;
   score: number;
+  matchScore: number;
+  popularityScore: number;
   reason: string;
+  breakdown?: {
+    topic: number;
+    skill: number;
+    community: number;
+  };
 }
 
 interface RecommendationsState {

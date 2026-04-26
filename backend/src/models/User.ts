@@ -37,7 +37,14 @@ const UserSchema: Schema = new Schema(
       averageRating: { type: Number, default: 0 },
     },
   },
-  { timestamps: true }
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
+
+// Virtual for events organized by this user
+UserSchema.virtual("organizedEvents", {
+  ref: "Event",
+  localField: "_id",
+  foreignField: "organizer",
+});
 
 export default mongoose.model<IUser>("User", UserSchema);

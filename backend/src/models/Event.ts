@@ -7,6 +7,7 @@ export interface IEvent extends Document {
   date: Date;
   location: string;
   tags: string[];
+  interests: string[];
   club: string;
   capacity: number;
   registeredAttendees: mongoose.Types.ObjectId[];
@@ -27,6 +28,7 @@ const EventSchema: Schema = new Schema(
     date: { type: Date, required: true },
     location: { type: String, required: true },
     tags: [{ type: String }],
+    interests: [{ type: String }],
     club: { type: String, required: true },
     capacity: { type: Number, required: true },
     registeredAttendees: [{ type: Schema.Types.ObjectId, ref: "User" }],

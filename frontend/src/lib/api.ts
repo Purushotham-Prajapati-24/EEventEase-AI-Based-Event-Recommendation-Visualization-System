@@ -4,7 +4,7 @@ export const setAccessToken = (token: string | null) => {
   accessToken = token;
 };
 
-const refreshAccessToken = async () => {
+export const refreshAccessToken = async () => {
   try {
     const response = await fetch("/api/auth/refresh", {
       method: "POST",

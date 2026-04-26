@@ -6,12 +6,16 @@ import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/store";
 import { getEvent, registerForEvent } from "@/store/slices/eventsSlice";
 import { Button } from "@/components/ui/button";
+import { AIScoreVisualization } from "@/components/events/AIScoreVisualization";
 
 export const EventDetails = () => {
   const { id } = useParams<{ id: string }>();
   const dispatch = useDispatch<AppDispatch>();
   const { event, isLoading, isError, message } = useSelector((state: RootState) => state.events);
   const { user } = useSelector((state: RootState) => state.auth);
+  const { recommendations } = useSelector((state: RootState) => state.recommendations);
+  
+  const recommendation = recommendations.find(r => r.event._id === id);
   const [activeTab, setActiveTab] = useState<"info" | "discussion" | "announcements">("info");
   const [isRegistering, setIsRegistering] = useState(false);
 
@@ -110,8 +114,17 @@ export const EventDetails = () => {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
-                      className="space-y-8"
+                    className="space-y-8"
                     >
+                      {recommendation && (
+                        <AIScoreVisualization 
+                          matchScore={recommendation.matchScore}
+                          popularityScore={recommendation.popularityScore}
+                          overallScore={recommendation.score}
+                          reason={recommendation.reason}
+                          breakdown={recommendation.breakdown}
+                        />
+                      )}
                       <div className="flex flex-wrap gap-3">
                         {event.tags.map(tag => (
                           <span key={tag} className="bg-primary/5 border border-primary/10 text-primary text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">
@@ -239,9 +252,23 @@ export const EventDetails = () => {
                     <Link to="/login">Login to Join</Link>
                   </Button>
                 ) : isRegistered ? (
-                  <div className="glass bg-primary/20 p-6 rounded-[24px] flex items-center justify-center gap-3 border-primary/30">
-                    <CheckCircle className="h-6 w-6 text-primary" />
-                    <span className="font-black italic text-primary uppercase tracking-widest text-xs">You're in!</span>
+                  <div className="space-y-4">
+                    <div className="glass bg-primary/20 p-6 rounded-[24px] flex items-center justify-center gap-3 border-primary/30">
+                      <CheckCircle className="h-6 w-6 text-primary" />
+                      <span className="font-black italic text-primary uppercase tracking-widest text-xs">You're in!</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button asChild variant="outline" className="rounded-[20px] h-14 font-black uppercase tracking-widest text-[10px] gap-2 border-primary/20 hover:bg-primary/5">
+                        <Link to={`/chat?room=${event.discussionChat}`}>
+                          <MessageSquare className="w-4 h-4" /> Discussion
+                        </Link>
+                      </Button>
+                      <Button asChild variant="outline" className="rounded-[20px] h-14 font-black uppercase tracking-widest text-[10px] gap-2 border-primary/20 hover:bg-primary/5">
+                        <Link to={`/chat?room=${event.announcementChat}`}>
+                          <Megaphone className="w-4 h-4 text-primary" /> Announcements
+                        </Link>
+                      </Button>
+                    </div>
                   </div>
                 ) : isFull ? (
                   <Button variant="destructive" className="w-full h-16 rounded-[24px] font-black opacity-50" disabled>

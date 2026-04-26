@@ -11,7 +11,8 @@ import {
   ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar,
   BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid
 } from "recharts";
-import { Activity, TrendingUp, Calendar, Zap } from "lucide-react";
+import { Activity, TrendingUp, Calendar, Zap, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 
 export const Dashboard = () => {
   const navigate = useNavigate();
@@ -19,6 +20,11 @@ export const Dashboard = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const { recommendations, isLoading } = useSelector((state: RootState) => state.recommendations);
   const { events } = useSelector((state: RootState) => state.events);
+  const registeredEvents = useMemo(() => {
+    return events.filter(e => e.registeredAttendees?.some((a: any) => 
+      (typeof a === 'string' ? a === user?._id : a._id === user?._id)
+    ));
+  }, [events, user]);
 
   useEffect(() => {
     if (!user) {
@@ -29,20 +35,34 @@ export const Dashboard = () => {
     }
   }, [user, navigate, dispatch]);
 
-  // Data for Interest Radar
+  // Data for Interest Radar (Real Alignment)
   const radarData = useMemo(() => {
-    const userInterests = user?.interests || [];
-    return userInterests.map(interest => {
-      // Create a simple stable hash for "random" look without impurity
-      const hash = interest.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    if (!recommendations.length) {
+      return [
+        { subject: 'Topic', A: 20, fullMark: 100 },
+        { subject: 'Skill', A: 20, fullMark: 100 },
+        { subject: 'Community', A: 20, fullMark: 100 },
+      ];
+    }
+
+    // Calculate average breakdown across all recommendations
+    const avgBreakdown = recommendations.reduce((acc, rec) => {
+      const b = rec.breakdown || { topic: rec.matchScore, skill: rec.matchScore, community: rec.matchScore };
       return {
-        subject: interest,
-        A: (hash % 40) + 60, // Stable match score
-        B: ((hash * 7) % 50) + 30, // Stable campus average
-        fullMark: 100,
+        topic: acc.topic + (b.topic || 0),
+        skill: acc.skill + (b.skill || 0),
+        community: acc.community + (b.community || 0)
       };
-    });
-  }, [user]);
+    }, { topic: 0, skill: 0, community: 0 });
+
+    const count = recommendations.length;
+    
+    return [
+      { subject: 'Topic Alignment', A: Math.round(avgBreakdown.topic / count), fullMark: 100 },
+      { subject: 'Skill Match', A: Math.round(avgBreakdown.skill / count), fullMark: 100 },
+      { subject: 'Community Fit', A: Math.round(avgBreakdown.community / count), fullMark: 100 },
+    ];
+  }, [recommendations]);
 
   // Data for Trending Bar Chart
   const trendingData = useMemo(() => {
@@ -71,7 +91,7 @@ export const Dashboard = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 glass p-8 rounded-3xl border-primary/20 shadow-xl">
         <div className="space-y-1">
           <h1 className="text-4xl font-black tracking-tight text-foreground">
-            Welcome, <span className="text-gradient">{user.name}</span>!
+            Welcome, <span className="text-primary">{user.name}</span>!
           </h1>
           <p className="text-muted-foreground font-medium flex items-center gap-2">
             <Zap className="h-4 w-4 text-accent" /> Your AI-powered event ecosystem is ready.
@@ -146,40 +166,159 @@ export const Dashboard = () => {
         </Card>
       </div>
 
+      {/* Schedule and Interests Breakdown */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <Card className="lg:col-span-2 glass border-primary/10 overflow-hidden shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" /> Your Schedule
+            </CardTitle>
+            <CardDescription>Events you are currently registered for.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {registeredEvents.length > 0 ? registeredEvents.map(event => (
+                <div key={event._id} className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-xl bg-primary/20 flex items-center justify-center">
+                      <Calendar className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-foreground">{event.title}</div>
+                      <div className="text-xs text-muted-foreground">{new Date(event.date).toLocaleDateString()} at {event.location}</div>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="sm" asChild className="rounded-full">
+                    <Link to={`/events/${event._id}`}>Details</Link>
+                  </Button>
+                </div>
+              )) : (
+                <div className="py-8 text-center text-muted-foreground italic bg-white/5 rounded-2xl border border-dashed border-white/10">
+                  No events in your schedule yet.
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="glass border-accent/20 bg-accent/5">
+          <CardHeader>
+            <CardTitle className="text-sm font-bold flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-accent" /> AI Alignment Tip
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground leading-relaxed">
+            Based on your interest in <span className="text-accent font-bold">{(user?.interests || [])[0] || 'Learning'}</span>, 
+            you might enjoy events tagged with <span className="text-primary">Social</span> or <span className="text-primary">Career</span>. 
+            We've found {recommendations.length} high-match opportunities for you today.
+          </CardContent>
+          <CardFooter>
+            <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: "75%" }}
+                className="h-full bg-accent"
+              />
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
+
       {/* Recommendations Feed */}
-      <div className="space-y-6">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="space-y-6"
+      >
         <h2 className="text-3xl font-black tracking-tight flex items-center gap-3">
-          <Zap className="h-7 w-7 text-primary animate-pulse" />
+          <Sparkles className="h-7 w-7 text-primary animate-pulse" />
           AI <span className="text-primary">Spotlight</span>
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoading ? (
-            <div className="col-span-full py-20 text-center">Loading AI magic...</div>
-          ) : recommendations?.map((rec) => (
-            <Card key={rec.event._id} className="glass border-primary/30 group hover:border-primary transition-all overflow-hidden shadow-lg">
-              <CardHeader>
-                <div className="flex justify-between items-start mb-2">
-                  <div className="bg-primary/10 text-primary text-[10px] font-bold px-3 py-1 rounded-full border border-primary/20">
-                    Match Score: {Math.floor(rec.score)}%
+            <div className="col-span-full py-20 text-center glass rounded-3xl border-dashed border-2 border-primary/20">
+              <div className="flex flex-col items-center gap-4">
+                <div className="h-12 w-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-xl font-medium text-muted-foreground">Analyzing your interests...</p>
+              </div>
+            </div>
+          ) : recommendations?.map((rec, index) => (
+            <motion.div
+              key={rec.event._id}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5 + index * 0.1 }}
+            >
+              <Card className="glass border-primary/30 group hover:border-primary transition-all overflow-hidden shadow-lg h-full flex flex-col">
+                <CardHeader>
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="bg-primary/10 text-primary text-[10px] font-bold px-3 py-1 rounded-full border border-primary/20 flex items-center gap-1">
+                      <Zap className="h-3 w-3 fill-primary" /> Match Score: {Math.floor(rec.score)}%
+                    </div>
                   </div>
-                </div>
-                <CardTitle className="text-xl group-hover:text-primary transition-colors">{rec.event.title}</CardTitle>
-                <CardDescription className="flex items-center gap-2">
-                  <Calendar className="h-3 w-3" /> {new Date(rec.event.date).toLocaleDateString()}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground line-clamp-2 italic">"{rec.reason}"</p>
-              </CardContent>
-              <CardFooter>
-                <Button asChild className="w-full rounded-full bg-linear-to-r from-primary to-accent border-none shadow-md">
-                  <Link to={`/events/${rec.event._id}`}>View Analysis</Link>
-                </Button>
-              </CardFooter>
-            </Card>
+                  <CardTitle className="text-xl group-hover:text-primary transition-colors line-clamp-1">{rec.event.title}</CardTitle>
+                  <CardDescription className="flex items-center gap-2">
+                    <Calendar className="h-3 w-3" /> {new Date(rec.event.date).toLocaleDateString()}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex-grow space-y-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground/90 italic font-medium line-clamp-2">
+                      "{rec.reason}"
+                    </p>
+                    <div className="flex flex-col items-end shrink-0">
+                      <span className="text-[20px] font-black leading-none text-primary">{Math.round(rec.score)}%</span>
+                      <span className="text-[7px] font-black uppercase tracking-tighter text-muted-foreground opacity-60">Match</span>
+                    </div>
+                  </div>
+                  
+                  {rec.breakdown && (
+                    <div className="space-y-3 pt-2">
+                      <div className="h-1.5 w-full bg-primary/5 rounded-full overflow-hidden flex gap-0.5">
+                        <div 
+                          className="h-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)] transition-all duration-1000 delay-500" 
+                          style={{ width: `${rec.breakdown.topic}%` }} 
+                        />
+                        <div 
+                          className="h-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)] transition-all duration-1000 delay-700" 
+                          style={{ width: `${rec.breakdown.skill}%` }} 
+                        />
+                        <div 
+                          className="h-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)] transition-all duration-1000 delay-900" 
+                          style={{ width: `${rec.breakdown.community}%` }} 
+                        />
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <div className="flex gap-3">
+                          <div className="flex items-center gap-1">
+                            <div className="h-1 w-1 rounded-full bg-blue-500" />
+                            <span className="text-[8px] font-black uppercase text-muted-foreground/70">{rec.breakdown.topic}% Topic</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <div className="h-1 w-1 rounded-full bg-emerald-500" />
+                            <span className="text-[8px] font-black uppercase text-muted-foreground/70">{rec.breakdown.skill}% Skill</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <div className="h-1 w-1 rounded-full bg-amber-500" />
+                            <span className="text-[8px] font-black uppercase text-muted-foreground/70">{rec.breakdown.community}% Social</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+                <CardFooter className="pt-2 pb-6">
+                  <Button asChild className="w-full rounded-full bg-linear-to-r from-primary to-accent border-none shadow-md hover:shadow-primary/20 hover:scale-[1.02] transition-all">
+                    <Link to={`/events/${rec.event._id}`}>Deep Analysis</Link>
+                  </Button>
+                </CardFooter>
+              </Card>
+            </motion.div>
           ))}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

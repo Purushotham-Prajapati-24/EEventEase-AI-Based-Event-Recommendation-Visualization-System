@@ -77,7 +77,8 @@ export const createEvent = async (req: Request, res: Response) => {
 
 export const getOrganizerEvents = async (req: Request, res: Response) => {
   try {
-    const events = await Event.find({ organizer: (req as any).user.id });
+    const events = await Event.find({ organizer: (req as any).user.id })
+      .populate("registeredAttendees", "interests");
     res.status(200).json(events);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch your events", error });

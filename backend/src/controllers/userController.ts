@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import mongoose from "mongoose";
 import User from "../models/User";
 import Notification from "../models/Notification";
 
@@ -13,7 +14,14 @@ export const getUsers = async (req: Request, res: Response) => {
 
 export const getUserById = async (req: Request, res: Response) => {
   try {
-    const user = await User.findById(req.params.id).select("-passwordHash");
+    const { id } = req.params;
+    if (typeof id !== 'string' || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid user ID format" });
+    }
+    const user = await User.findById(id)
+      .select("-passwordHash")
+      .populate("registeredEvents")
+      .populate("organizedEvents");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }

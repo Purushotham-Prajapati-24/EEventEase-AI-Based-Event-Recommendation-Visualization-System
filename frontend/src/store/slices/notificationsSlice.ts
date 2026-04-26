@@ -25,7 +25,7 @@ export const fetchNotifications = createAsyncThunk(
   "notifications/fetchAll",
   async () => {
     const response = await api.get("/notifications");
-    return response.data;
+    return response;
   }
 );
 

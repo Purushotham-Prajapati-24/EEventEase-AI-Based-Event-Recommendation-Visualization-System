@@ -11,7 +11,8 @@ export const generateEventRecommendations = async (
   userInterests: string[],
   eventTags: string[],
   eventTitle: string,
-  eventDescription: string
+  eventDescription: string,
+  eventInterests: string[] = []
 ) => {
   if (!process.env.GROQ_API_KEY) {
     console.warn("GROQ_API_KEY is not set. Falling back to basic match.");
@@ -27,19 +28,26 @@ export const generateEventRecommendations = async (
 
   try {
     const prompt = `
-      You are an AI assistant for a college event recommendation platform called EventEase.
-      Evaluate how well the following event matches the user's interests.
+      You are an expert student life coordinator at a university.
+      Evaluate the relevance of the following event for a student with the listed interests.
       
       User Interests: ${userInterests.join(", ")}
       Event Title: ${eventTitle}
       Event Tags: ${eventTags.join(", ")}
+      Event Focus Interests: ${eventInterests.join(", ")}
       Event Description: ${eventDescription}
       
-      Provide your analysis in strictly valid JSON format with two fields:
-      - "matchScore": an integer from 0 to 100 representing the relevance.
-      - "explanation": a short 1-2 sentence explanation of why this event matches or doesn't match their interests.
+      Analysis Criteria:
+      1. Topic Relevance: How well do the event's defined interests and tags overlap with user interests?
+      2. Skill Alignment: Does the event offer growth relevant to their professional/personal interests?
+      3. Community Fit: Is this a high-value activity for someone with their hobbies?
+
+      Provide your analysis in strictly valid JSON format with:
+      - "matchScore": an integer from 0 to 100 representing the total relevance.
+      - "explanation": a short (max 15 words) punchy explanation.
+      - "breakdown": an object with "topic", "skill", and "community" scores (0-100 each).
       
-      Do NOT wrap the JSON in Markdown formatting like \`\`\`json. Return only the raw JSON.
+      Return ONLY raw JSON. No markdown.
     `;
 
     const chatCompletion = await groq.chat.completions.create({
@@ -49,7 +57,7 @@ export const generateEventRecommendations = async (
           content: prompt,
         },
       ],
-      model: "llama3-8b-8192", // Fast and efficient for quick inferences
+      model: "llama-3.1-8b-instant",
       temperature: 0.3,
       response_format: { type: "json_object" },
     });
@@ -60,6 +68,7 @@ export const generateEventRecommendations = async (
     return {
       matchScore: result.matchScore || 0,
       explanation: result.explanation || "No explanation provided.",
+      breakdown: result.breakdown || { topic: 0, skill: 0, community: 0 }
     };
   } catch (error) {
     console.error("Error generating recommendations:", error);

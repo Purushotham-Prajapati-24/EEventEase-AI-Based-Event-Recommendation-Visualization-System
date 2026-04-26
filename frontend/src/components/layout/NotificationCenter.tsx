@@ -3,19 +3,22 @@ import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/store";
 import { fetchNotifications, markRead } from "@/store/slices/notificationsSlice";
 import { Button } from "@/components/ui/button";
-import { Bell, Mail, Info, Check, CheckCircle2, UserPlus } from "lucide-react";
+import { Bell, Mail, Info, Check, CheckCircle2, UserPlus, Megaphone } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export const NotificationCenter = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const { user, isInitialized } = useSelector((state: RootState) => state.auth);
   const { items } = useSelector((state: RootState) => state.notifications);
   const [isOpen, setIsOpen] = useState(false);
 
   const unreadCount = (items || []).filter(n => !n.isRead).length;
 
   useEffect(() => {
-    dispatch(fetchNotifications());
-  }, [dispatch]);
+    if (isInitialized && user) {
+      dispatch(fetchNotifications());
+    }
+  }, [dispatch, user, isInitialized]);
 
   const handleRead = (id: string) => {
     dispatch(markRead(id));
@@ -54,15 +57,25 @@ export const NotificationCenter = () => {
                     className={`p-4 border-b border-primary/5 flex gap-3 transition-colors hover:bg-primary/10 ${!n.isRead ? 'bg-primary/5' : ''}`}
                     onClick={() => handleRead(n._id)}
                   >
-                    <div className={`mt-1 p-2 rounded-full ${n.type === 'invite' ? 'bg-accent/20 text-accent' : n.type === 'follow' ? 'bg-secondary/20 text-secondary' : 'bg-primary/20 text-primary'}`}>
-                      {n.type === 'invite' ? <Mail className="h-3 w-3" /> : n.type === 'follow' ? <UserPlus className="h-3 w-3" /> : <Info className="h-3 w-3" />}
+                    <div className={`mt-1 p-2 rounded-full ${
+                      n.type === 'invite' ? 'bg-accent/20 text-accent' : 
+                      n.type === 'follow' ? 'bg-secondary/20 text-secondary' : 
+                      n.type === 'announcement' ? 'bg-primary/30 text-primary animate-pulse' :
+                      'bg-primary/20 text-primary'
+                    }`}>
+                      {n.type === 'invite' ? <Mail className="h-3 w-3" /> : 
+                       n.type === 'follow' ? <UserPlus className="h-3 w-3" /> : 
+                       n.type === 'announcement' ? <Megaphone className="h-3 w-3" /> :
+                       <Info className="h-3 w-3" />}
                     </div>
                     <div className="flex-1 space-y-1">
                       <p className="text-sm font-medium leading-tight">{n.message}</p>
                       <p className="text-[10px] text-muted-foreground">{new Date(n.createdAt).toLocaleDateString()}</p>
                       {n.link && (
                         <Link to={n.link} className="inline-block mt-2 text-[10px] font-bold text-primary hover:underline" onClick={() => setIsOpen(false)}>
-                          {n.type === 'follow' ? 'View Profile →' : 'View Event →'}
+                          {n.type === 'follow' ? 'View Profile →' : 
+                           n.type === 'announcement' ? 'Read Now →' :
+                           'View Details →'}
                         </Link>
                       )}
                     </div>

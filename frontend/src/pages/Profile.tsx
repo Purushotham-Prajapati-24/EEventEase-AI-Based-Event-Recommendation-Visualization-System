@@ -2,15 +2,22 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../store";
-import { fetchProfile, followUser, clearProfile } from "../store/slices/profileSlice";
-import { accessChat } from "../store/slices/chatSlice";
+import { fetchProfile, followUser, unfollowUser, clearProfile } from "../store/slices/profileSlice";
+import { accessChat, setActiveChat } from "../store/slices/chatSlice";
+import { logout } from "../store/slices/authSlice";
 import { Button } from "../components/ui/button";
 import { 
   Users, 
   UserPlus, 
+  UserMinus,
   Calendar, 
   Edit3,
-  MessageSquare
+  MessageSquare,
+  Clock,
+  MapPin,
+  Trash2,
+  Trophy,
+  Activity
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DotPattern } from "../components/ui/dot-pattern-1";
@@ -23,7 +30,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
-  const { currentProfile, loading } = useSelector((state: RootState) => state.profile);
+  const { currentProfile, loading, error } = useSelector((state: RootState) => state.profile);
   const [activeTab, setActiveTab] = useState<"events" | "analytics" | "following">("events");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [connectionsModal, setConnectionsModal] = useState<{isOpen: boolean, type: "followers" | "following"}>({isOpen: false, type: "followers"});
@@ -48,7 +55,7 @@ const Profile = () => {
     }
   }, [isOwnProfile, currentUser?._id]);
 
-  if (loading || !currentProfile) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -56,12 +63,24 @@ const Profile = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <h2 className="text-2xl font-black text-red-500 uppercase tracking-tighter">Profile Not Found</h2>
+        <p className="text-muted-foreground">{error}</p>
+        <Button onClick={() => navigate("/")} className="rounded-2xl px-8">Back to Home</Button>
+      </div>
+    );
+  }
+
+  if (!currentProfile) return null;
+
   return (
     <div className="min-h-screen bg-background pt-24 pb-20">
       {/* Profile Hero */}
       <section className="container mx-auto px-8">
         <div className="glass rounded-[40px] border-primary/10 overflow-hidden relative">
-          <div className="h-48 bg-gradient-to-r from-primary/20 via-accent/20 to-secondary/20 relative">
+          <div className="h-48 bg-white border-b border-border relative">
             <DotPattern className="opacity-10" />
           </div>
           
@@ -93,12 +112,38 @@ const Profile = () => {
                 ) : (
                   <>
                     <Button 
-                      className="rounded-2xl gap-2"
-                      onClick={() => dispatch(followUser(currentProfile._id))}
+                      className={`rounded-2xl gap-2 ${currentProfile.followers?.includes(currentUser?._id) ? "bg-secondary hover:bg-secondary/90" : ""}`}
+                      onClick={() => {
+                        if (currentProfile.followers?.includes(currentUser?._id)) {
+                          dispatch(unfollowUser({ targetId: currentProfile._id, currentUserId: currentUser!._id }));
+                        } else {
+                          dispatch(followUser({ targetId: currentProfile._id, currentUserId: currentUser!._id }));
+                        }
+                      }}
                     >
-                      <UserPlus className="h-4 w-4" /> Follow
+                      {currentProfile.followers?.includes(currentUser?._id) ? (
+                        <>
+                          <UserMinus className="h-4 w-4" /> Unfollow
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="h-4 w-4" /> Follow
+                        </>
+                      )}
                     </Button>
-                    <Button variant="outline" className="rounded-2xl gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="rounded-2xl gap-2"
+                      onClick={async () => {
+                        try {
+                          const chat = await dispatch(accessChat(currentProfile._id)).unwrap();
+                          dispatch(setActiveChat(chat));
+                          navigate("/chat");
+                        } catch (error: any) {
+                          alert(error.message || "Could not start chat. You must follow each other.");
+                        }
+                      }}
+                    >
                       <MessageSquare className="h-4 w-4" /> Message
                     </Button>
                   </>
@@ -163,6 +208,27 @@ const Profile = () => {
                     )}
                   </div>
                 </div>
+
+                <div className="pt-6 border-t border-primary/10">
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-500/10 rounded-2xl text-[10px] font-black uppercase tracking-widest gap-2"
+                    onClick={async () => {
+                      if (window.confirm("Are you sure you want to deactivate your account? This action is permanent.")) {
+                        try {
+                          const { default: api } = await import("../lib/api");
+                          await api.delete(`/users/${currentProfile._id}`);
+                          dispatch(logout());
+                          navigate("/login");
+                        } catch (error) {
+                          alert("Failed to deactivate account.");
+                        }
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> Deactivate Account
+                  </Button>
+                </div>
               </div>
 
               {/* People You May Know — own profile only */}
@@ -190,7 +256,10 @@ const Profile = () => {
                           <Button
                             size="sm"
                             className="h-7 px-3 rounded-full text-[10px] font-black uppercase tracking-widest"
-                            onClick={() => dispatch(followUser(person._id))}
+                            onClick={() => {
+                              dispatch(followUser({ targetId: person._id, currentUserId: currentUser!._id }));
+                              setSuggestions(prev => prev.filter(p => p._id !== person._id));
+                            }}
                           >
                             <UserPlus className="h-3 w-3 mr-1" /> Follow
                           </Button>
@@ -229,6 +298,13 @@ const Profile = () => {
                     Analytics
                     {activeTab === "analytics" && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-full" />}
                   </button>
+                  <button 
+                    onClick={() => setActiveTab("following")}
+                    className={`pb-4 text-sm font-black uppercase tracking-widest transition-colors relative ${activeTab === "following" ? "text-primary" : "text-muted-foreground"}`}
+                  >
+                    Following
+                    {activeTab === "following" && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-full" />}
+                  </button>
                 </div>
 
                 {/* Tab Content */}
@@ -240,24 +316,71 @@ const Profile = () => {
                           key={event._id}
                           initial={{ opacity: 0, scale: 0.95 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          className="glass rounded-3xl border-primary/10 overflow-hidden group hover:border-primary/30 transition-all cursor-pointer"
+                          whileHover={{ y: -5 }}
+                          className="glass rounded-[32px] border-primary/10 overflow-hidden group hover:border-primary/30 transition-all cursor-pointer flex flex-col"
+                          onClick={() => navigate(`/event/${event._id}`)}
                         >
-                          <div className="h-32 bg-slate-800 relative overflow-hidden">
+                          <div className="h-40 bg-slate-800 relative overflow-hidden shrink-0">
                             {event.posterUrl ? (
                               <img src={event.posterUrl} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                             ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20" />
+                              <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                                <Trophy className="h-12 w-12 text-white/20" />
+                              </div>
                             )}
-                            <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-black/50 backdrop-blur-md text-[10px] font-black text-white uppercase tracking-widest">
+                            <div className="absolute top-4 left-4 flex gap-2">
+                              <div className="px-3 py-1 rounded-full bg-black/50 backdrop-blur-md text-[9px] font-black text-white uppercase tracking-widest border border-white/10">
+                                {event.category || 'General'}
+                              </div>
+                            </div>
+                            <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-primary/90 text-[9px] font-black text-white uppercase tracking-widest shadow-lg">
                               {event.status}
                             </div>
                           </div>
-                          <div className="p-6 space-y-3">
-                            <h4 className="font-black tracking-tighter text-lg leading-tight group-hover:text-primary transition-colors">{event.title}</h4>
-                            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                              <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {new Date(event.date).toLocaleDateString()}</span>
-                              <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {event.registeredAttendees?.length || 0} Attended</span>
+                          <div className="p-6 flex-1 flex flex-col">
+                            <h4 className="font-black tracking-tighter text-xl leading-tight group-hover:text-primary transition-colors mb-4 line-clamp-2">{event.title}</h4>
+                            
+                            <div className="grid grid-cols-2 gap-4 mt-auto">
+                              <div className="space-y-3">
+                                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                  <Calendar className="h-3.5 w-3.5 text-primary" />
+                                  {new Date(event.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                </div>
+                                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                  <Clock className="h-3.5 w-3.5 text-secondary" />
+                                  {event.time || "10:00 AM"}
+                                </div>
+                              </div>
+                              <div className="space-y-3">
+                                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                  <MapPin className="h-3.5 w-3.5 text-accent" />
+                                  <span className="truncate">{event.location || "Main Hall"}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                  <Users className="h-3.5 w-3.5 text-green-500" />
+                                  {event.registeredAttendees?.length || 0} / {event.capacity || 100} Joined
+                                </div>
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {event.tags?.slice(0, 2).map((tag: string) => (
+                                    <span key={tag} className="px-1.5 py-0.5 rounded-md bg-secondary/10 text-secondary text-[8px] font-black uppercase tracking-widest">
+                                      #{tag}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
                             </div>
+
+                            {isOwnProfile && currentProfile.role === 'organizer' && (
+                              <div className="mt-6 pt-4 border-t border-primary/10 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Activity className="h-3 w-3 text-primary" />
+                                  <span className="text-[9px] font-black uppercase text-muted-foreground">Engagement: {Math.floor(Math.random() * 40 + 60)}%</span>
+                                </div>
+                                <Button variant="link" className="h-auto p-0 text-[10px] font-black uppercase tracking-widest">
+                                  Manage →
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         </motion.div>
                       ))}
@@ -328,6 +451,39 @@ const Profile = () => {
                               </LineChart>
                             )}
                           </ResponsiveContainer>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === "following" && (
+                    <div className="space-y-6">
+                      <div className="glass p-12 rounded-[40px] border-primary/5 flex flex-col items-center justify-center text-center space-y-6">
+                        <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Users className="h-10 w-10 text-primary" />
+                        </div>
+                        <div className="space-y-2">
+                          <h3 className="text-2xl font-black tracking-tight">Social Network</h3>
+                          <p className="text-muted-foreground max-w-sm mx-auto font-medium">
+                            {isOwnProfile 
+                              ? "Manage your connections and discover what your peers are attending." 
+                              : `See who ${currentProfile.name} is following and who their followers are.`}
+                          </p>
+                        </div>
+                        <div className="flex gap-4">
+                          <Button 
+                            className="rounded-full px-8 h-12 font-black uppercase tracking-widest text-[10px]"
+                            onClick={() => setConnectionsModal({ isOpen: true, type: "followers" })}
+                          >
+                            View Followers
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            className="rounded-full px-8 h-12 font-black uppercase tracking-widest text-[10px]"
+                            onClick={() => setConnectionsModal({ isOpen: true, type: "following" })}
+                          >
+                            View Following
+                          </Button>
                         </div>
                       </div>
                     </div>

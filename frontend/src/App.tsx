@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import React, { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "./store";
 import { Navbar } from "./components/layout/Navbar"
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -48,7 +50,20 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
 const OrganizerAnalytics = () => <div className="p-8">Organizer Analytics</div>
 const AIInsights = () => <div className="p-8">AI Insights Dashboard</div>
 
+import { checkAuth, setInitialized } from "./store/slices/authSlice";
+
 function App() {
+  const dispatch = useDispatch<AppDispatch>();
+
+  useEffect(() => {
+    // Proactively refresh token if user exists in local storage
+    if (localStorage.getItem("user")) {
+      dispatch(checkAuth());
+    } else {
+      dispatch(setInitialized());
+    }
+  }, [dispatch]);
+
   return (
     <BrowserRouter>
       <RootLayout>

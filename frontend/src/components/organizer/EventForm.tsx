@@ -6,9 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { ImagePlus, X, Calendar, MapPin, Users as UsersIcon, FileText, Link as LinkIcon, Upload } from "lucide-react";
+import { ImagePlus, X, Calendar, MapPin, Users as UsersIcon, FileText, Link as LinkIcon, Upload, Trophy } from "lucide-react";
 import api from "@/lib/api";
 import { uploadImage } from "@/lib/imagekit";
+
+const INTEREST_OPTIONS = [
+  "Coding", "Tech", "Dance", "Management", "Sports", "Music",
+  "Art", "Design", "Business", "Networking", "Literature", "Gaming",
+  "Photography", "Film", "Science", "Robotics", "Finance", "Debate"
+];
 
 const eventSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -17,6 +23,7 @@ const eventSchema = z.object({
   location: z.string().min(3, "Venue/Location is required"),
   club: z.string().min(2, "Club name is required"),
   capacity: z.number().min(1, "Capacity must be at least 1"),
+  interests: z.array(z.string()).min(1, "Select at least one interest"),
 });
 
 interface EventFormProps {
@@ -39,6 +46,7 @@ export const EventForm = ({ onSuccess, onCancel }: EventFormProps) => {
       location: "",
       club: "",
       capacity: 50,
+      interests: [],
     },
   });
 
@@ -88,10 +96,11 @@ export const EventForm = ({ onSuccess, onCancel }: EventFormProps) => {
             </Button>
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-6">
+        <CardContent className="p-0 flex flex-col max-h-[85vh]">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Banner Type Toggle */}
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
+              <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+                {/* Banner Type Toggle */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2 p-1 rounded-2xl bg-primary/5 border border-primary/10 w-fit">
                   <button
@@ -241,21 +250,97 @@ export const EventForm = ({ onSuccess, onCancel }: EventFormProps) => {
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
 
+                <FormField
+                  control={form.control}
+                  name="interests"
+                  render={({ field }) => (
+                    <FormItem className="space-y-4">
+                      <FormLabel className="flex items-center gap-2"><Trophy className="h-4 w-4 text-primary" /> Target Interests (AI Matching)</FormLabel>
+                      <FormControl>
+                        <div className="space-y-3">
+                          <select
+                            multiple
+                            className="w-full rounded-2xl border border-primary/20 bg-primary/5 p-3 text-sm focus:border-primary focus:outline-none transition-all h-32 hidden"
+                            value={field.value}
+                            onChange={(e) => {
+                              const options = Array.from(e.target.selectedOptions, option => option.value);
+                              field.onChange(options);
+                            }}
+                          >
+                            {INTEREST_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                          </select>
+                          
+                          {/* Premium Multi-select UI */}
+                          <div className="relative group">
+                            <div className="flex flex-wrap gap-2 p-3 min-h-[56px] rounded-2xl border border-primary/10 bg-primary/5 transition-all group-hover:border-primary/30">
+                              {field.value?.length > 0 ? (
+                                field.value.map((interest: string) => (
+                                  <span key={interest} className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest shadow-md">
+                                    {interest}
+                                    <button 
+                                      type="button" 
+                                      onClick={() => field.onChange(field.value.filter((i: string) => i !== interest))}
+                                      className="hover:text-red-300 transition-colors"
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </button>
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-muted-foreground text-sm flex items-center px-2">Select event interest types...</span>
+                              )}
+                            </div>
+                            
+                            <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2 p-2 rounded-2xl border border-primary/5 bg-primary/5 max-h-[160px] overflow-y-auto">
+                              {INTEREST_OPTIONS.map((interest) => {
+                                const isSelected = field.value?.includes(interest);
+                                return (
+                                  <button
+                                    key={interest}
+                                    type="button"
+                                    onClick={() => {
+                                      const current = field.value || [];
+                                      const updated = isSelected
+                                        ? current.filter((i: string) => i !== interest)
+                                        : [...current, interest];
+                                      field.onChange(updated);
+                                    }}
+                                    className={`px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all text-left flex items-center justify-between ${
+                                      isSelected
+                                        ? "bg-primary/20 text-primary border border-primary/20"
+                                        : "hover:bg-primary/10 text-muted-foreground"
+                                    }`}
+                                  >
+                                    {interest}
+                                    {isSelected && <div className="h-1.5 w-1.5 rounded-full bg-primary" />}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+            </div>
+
+            <div className="p-6 bg-primary/5 border-t border-primary/10">
               {error && (
-                <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium animate-in slide-in-from-top-2 duration-300">
+                <div className="mb-4 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium">
                   {error}
                 </div>
               )}
 
-              <div className="flex justify-between items-center pt-4 border-t border-primary/10">
+              <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2 text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
                   <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  SSL Secure Submission
+                  AI-Ready Submission
                 </div>
                 <div className="flex gap-3">
                   <Button type="button" variant="ghost" onClick={onCancel} className="rounded-full">Cancel</Button>
@@ -273,9 +358,10 @@ export const EventForm = ({ onSuccess, onCancel }: EventFormProps) => {
                   </Button>
                 </div>
               </div>
-            </form>
-          </Form>
-        </CardContent>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
       </Card>
     </div>
   );

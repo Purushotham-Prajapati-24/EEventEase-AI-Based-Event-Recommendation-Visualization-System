@@ -60,28 +60,13 @@ export const Home = () => {
 
   return (
     <div ref={heroRef} className="min-h-screen bg-background overflow-hidden relative">
-      {/* Cinematic Gooey Background Layer */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden opacity-50">
-        <GooeyFilter id="gooey-filter-pixel-trail" strength={screenSize.lessThan('md') ? 2 : 4} />
-        <div
-          className="absolute inset-0"
-          style={{ filter: "url(#gooey-filter-pixel-trail)" }}
-        >
-          <PixelTrail
-            pixelSize={screenSize.lessThan('md') ? 24 : 36}
-            fadeDuration={1000}
-            delay={0}
-            pixelClassName="bg-black dark:bg-primary"
-          />
-        </div>
-      </div>
+      {/* Clean White Background */}
+      <div className="absolute inset-0 z-0 bg-background" />
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 px-8 flex flex-col items-center text-center z-10 pointer-events-none">
         <div className="pointer-events-auto">
-          {/* Background Gradients */}
-          <div className="absolute top-0 -left-4 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute top-0 -right-4 w-72 h-72 bg-accent/20 rounded-full blur-3xl animate-pulse delay-700" />
+          {/* Simplified Background */}
           
           <div className="max-w-4xl space-y-8 relative z-10">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-black uppercase tracking-widest animate-bounce">

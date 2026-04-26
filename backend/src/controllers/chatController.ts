@@ -10,6 +10,20 @@ export const accessChat = async (req: any, res: Response) => {
     return res.status(400).json({ message: "UserId not provided" });
   }
 
+  // Enforce social relationship check: Any user who follows another user can chat
+  const currentUser = await User.findById(req.user.id);
+  const targetUser = await User.findById(userId);
+
+  if (!currentUser || !targetUser) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  const isFollowing = currentUser.following.includes(userId) || currentUser.followers.includes(userId);
+  
+  if (!isFollowing) {
+    return res.status(403).json({ message: "You can only chat with users you follow or who follow you" });
+  }
+
   let isChat: any = await Chat.find({
     isGroupChat: false,
     $and: [

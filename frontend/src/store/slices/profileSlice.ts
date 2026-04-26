@@ -28,13 +28,21 @@ export const updateProfile = createAsyncThunk(
   }
 );
 
-export const followUser = createAsyncThunk("profile/followUser", async (userId: string) => {
-  return await api.post(`/users/${userId}/follow`);
-});
+export const followUser = createAsyncThunk(
+  "profile/followUser", 
+  async ({ targetId, currentUserId }: { targetId: string; currentUserId: string }) => {
+    await api.post(`/users/${targetId}/follow`);
+    return { targetId, currentUserId };
+  }
+);
 
-export const unfollowUser = createAsyncThunk("profile/unfollowUser", async (userId: string) => {
-  return await api.post(`/users/${userId}/unfollow`);
-});
+export const unfollowUser = createAsyncThunk(
+  "profile/unfollowUser", 
+  async ({ targetId, currentUserId }: { targetId: string; currentUserId: string }) => {
+    await api.post(`/users/${targetId}/unfollow`);
+    return { targetId, currentUserId };
+  }
+);
 
 const profileSlice = createSlice({
   name: "profile",
@@ -52,14 +60,48 @@ const profileSlice = createSlice({
       .addCase(fetchProfile.fulfilled, (state, action) => {
         state.loading = false;
         state.currentProfile = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to fetch profile";
+        state.currentProfile = null;
       })
       .addCase(updateProfile.fulfilled, (state, action) => {
         state.currentProfile = action.payload;
       })
       .addCase(followUser.fulfilled, (state, action) => {
-        // Optimistic UI or refetch? Let's assume refetch or manual update
-        if (state.currentProfile) {
-          // Update followers locally if needed
+        const { targetId, currentUserId } = action.payload;
+        
+        // Update the profile being viewed if it's the target
+        if (state.currentProfile && state.currentProfile._id === targetId) {
+          if (!state.currentProfile.followers.includes(currentUserId)) {
+            state.currentProfile.followers.push(currentUserId);
+          }
+        }
+        
+        // Update the profile being viewed if it's the current user (my following list)
+        if (state.currentProfile && state.currentProfile._id === currentUserId) {
+          if (!state.currentProfile.following.includes(targetId)) {
+            state.currentProfile.following.push(targetId);
+          }
+        }
+      })
+      .addCase(unfollowUser.fulfilled, (state, action) => {
+        const { targetId, currentUserId } = action.payload;
+        
+        // Update the profile being viewed if it's the target
+        if (state.currentProfile && state.currentProfile._id === targetId) {
+          state.currentProfile.followers = state.currentProfile.followers.filter(
+            (id: string) => id !== currentUserId
+          );
+        }
+        
+        // Update the profile being viewed if it's the current user (my following list)
+        if (state.currentProfile && state.currentProfile._id === currentUserId) {
+          state.currentProfile.following = state.currentProfile.following.filter(
+            (id: string) => id !== targetId
+          );
         }
       });
   },

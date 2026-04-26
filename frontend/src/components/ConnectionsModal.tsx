@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { X, UserPlus, MessageSquare, Users } from "lucide-react";
+import { X, UserPlus, UserMinus, MessageSquare, Users } from "lucide-react";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "../store";
+import { followUser, unfollowUser } from "../store/slices/profileSlice";
 import api from "../lib/api";
 
 interface ConnectionsModalProps {
@@ -15,20 +18,50 @@ export const ConnectionsModal = ({ userId, type, onClose }: ConnectionsModalProp
   const [connections, setConnections] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     const fetchConnections = async () => {
       try {
+        setLoading(true);
+        console.log(`[ConnectionsModal] Fetching ${type} for user: ${userId}`);
         const response = await api.get(`/users/${userId}/connections`);
-        setConnections(response.data[type] || []);
+        console.log("[ConnectionsModal] Response received:", response);
+        
+        // Handle both direct array and object with keys
+        const list = response[type] || (Array.isArray(response) ? response : []);
+        console.log(`[ConnectionsModal] Setting ${type} list:`, list);
+        setConnections(list);
       } catch (error) {
-        console.error("Failed to fetch connections", error);
+        console.error("[ConnectionsModal] Failed to fetch connections:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchConnections();
+    if (userId) {
+      fetchConnections();
+    }
   }, [userId, type]);
+
+  const handleFollowToggle = async (e: React.MouseEvent, person: any) => {
+    e.stopPropagation();
+    if (!currentUser) return;
+
+    const isFollowing = currentUser.following?.includes(person._id);
+
+    try {
+      if (isFollowing) {
+        await dispatch(unfollowUser({ targetId: person._id, currentUserId: currentUser._id })).unwrap();
+      } else {
+        await dispatch(followUser({ targetId: person._id, currentUserId: currentUser._id })).unwrap();
+      }
+      // Re-fetch to ensure sync (or we could rely on Redux update if it was globally consistent)
+      // For now, let's just let Redux handle the button state via currentUser update
+    } catch (error) {
+      console.error("Failed to toggle follow status", error);
+    }
+  };
 
   return (
     <motion.div 
@@ -54,31 +87,62 @@ export const ConnectionsModal = ({ userId, type, onClose }: ConnectionsModalProp
 
         <div className="p-6 overflow-y-auto flex-1 space-y-4">
           {loading ? (
-            <div className="flex justify-center p-8">
-              <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></span>
+            <div className="flex flex-col items-center justify-center p-12 gap-4">
+              <span className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></span>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Loading {type}...</p>
             </div>
           ) : connections.length === 0 ? (
-            <div className="text-center p-8 opacity-50">
-              <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="font-bold">No {type} yet.</p>
+            <div className="text-center p-12 space-y-4">
+              <div className="h-16 w-16 rounded-3xl bg-primary/5 flex items-center justify-center mx-auto">
+                <Users className="h-8 w-8 text-primary/20" />
+              </div>
+              <p className="font-bold text-muted-foreground italic">No {type} found.</p>
             </div>
           ) : (
-            connections.map((person) => (
-              <div key={person._id} className="flex items-center gap-4 p-3 rounded-2xl bg-primary/5 border border-primary/10 hover:border-primary/30 transition-all cursor-pointer" onClick={() => {
-                onClose();
-                navigate(`/profile/${person._id}`);
-              }}>
-                <img 
-                  src={person.profileImage || `https://i.pravatar.cc/150?u=${person._id}`} 
-                  alt={person.name} 
-                  className="h-12 w-12 rounded-xl object-cover"
-                />
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-black truncate">{person.name}</h4>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{person.role}</p>
+            connections.map((person) => {
+              const isFollowing = currentUser?.following?.includes(person._id);
+              const isMe = person._id === currentUser?._id;
+
+              return (
+                <div 
+                  key={person._id} 
+                  className="flex items-center gap-4 p-4 rounded-3xl bg-primary/5 border border-primary/10 hover:border-primary/30 transition-all cursor-pointer group" 
+                  onClick={() => {
+                    onClose();
+                    navigate(`/profile/${person._id}`);
+                  }}
+                >
+                  <img 
+                    src={person.profileImage || `https://i.pravatar.cc/150?u=${person._id}`} 
+                    alt={person.name} 
+                    className="h-12 w-12 rounded-2xl object-cover shadow-md"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-black truncate group-hover:text-primary transition-colors">{person.name}</h4>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">{person.role}</p>
+                  </div>
+
+                  {!isMe && currentUser && (
+                    <Button
+                      size="sm"
+                      variant={isFollowing ? "outline" : "default"}
+                      className={`h-9 rounded-full text-[10px] font-black uppercase tracking-widest gap-1.5 px-4 ${isFollowing ? 'border-primary/20' : 'shadow-lg shadow-primary/20'}`}
+                      onClick={(e) => handleFollowToggle(e, person)}
+                    >
+                      {isFollowing ? (
+                        <>
+                          <UserMinus className="h-3 w-3" /> Unfollow
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="h-3 w-3" /> Follow
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </motion.div>

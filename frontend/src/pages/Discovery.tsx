@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Target } from "lucide-react";
+import { Target, Sparkles, Zap, Activity } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -55,8 +55,8 @@ export const Discovery = () => {
       {/* Hero Header */}
       <div className="container mx-auto px-8 pt-20 pb-10">
         <div className="flex flex-col space-y-4">
-          <h1 className="text-6xl font-black tracking-tighter text-gradient">
-            Discover <span className="text-foreground">Events</span>
+          <h1 className="text-6xl font-black tracking-tighter">
+            Discover <span className="text-primary">Events</span>
           </h1>
           <p className="text-xl text-muted-foreground font-medium max-w-2xl">
             Find the best college events tailored just for you. Powered by AI, designed for students.
@@ -66,7 +66,7 @@ export const Discovery = () => {
 
       {/* GSAP Horizontal Scroll Section */}
       {user && recommendations && recommendations.length > 0 && (
-        <div ref={containerRef} className="overflow-hidden bg-primary/5 py-24 border-y border-primary/10">
+        <div ref={containerRef} className="overflow-hidden bg-white py-24 border-y border-border">
           <div className="container mx-auto px-8 mb-12">
             <h2 className="text-4xl font-black tracking-tight flex items-center gap-4">
               <span className="h-2 w-16 bg-primary rounded-full" /> 
@@ -103,15 +103,53 @@ export const Discovery = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="px-8 pb-8 flex-1">
-                  <p className="line-clamp-3 text-base text-muted-foreground/90 italic font-medium">
-                    "{rec.reason}"
-                  </p>
-                  <div className="mt-8 flex flex-wrap gap-2">
-                    {rec.event.tags.map(tag => (
-                      <span key={tag} className="bg-primary/10 text-primary text-xs font-black px-3 py-1.5 rounded-full border border-primary/20 uppercase tracking-tighter">
-                        {tag}
-                      </span>
-                    ))}
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground/90 italic font-medium line-clamp-2">
+                        "{rec.reason}"
+                      </p>
+                      <div className="flex flex-col items-end">
+                        <span className="text-[24px] font-black leading-none text-primary">{Math.round(rec.score * 100)}%</span>
+                        <span className="text-[8px] font-black uppercase tracking-tighter text-muted-foreground opacity-60">Match</span>
+                      </div>
+                    </div>
+
+                    {rec.breakdown && (
+                      <div className="space-y-3">
+                        <div className="h-1.5 w-full bg-primary/5 rounded-full overflow-hidden flex gap-0.5">
+                          <div className="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" style={{ width: `${rec.breakdown.topic}%` }} />
+                          <div className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" style={{ width: `${rec.breakdown.skill}%` }} />
+                          <div className="h-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]" style={{ width: `${rec.breakdown.community}%` }} />
+                        </div>
+
+                        <div className="flex justify-between items-center px-1">
+                          <div className="flex gap-4">
+                            <div className="flex items-center gap-1">
+                              <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                              <span className="text-[9px] font-black uppercase text-muted-foreground">{rec.breakdown.topic}% Interest</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                              <span className="text-[9px] font-black uppercase text-muted-foreground">{rec.breakdown.skill}% Skill</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                              <span className="text-[9px] font-black uppercase text-muted-foreground">{rec.breakdown.community}% Social</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {rec.event.tags && rec.event.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        {rec.event.tags.map(tag => (
+                          <span key={tag} className="bg-primary/5 text-primary/70 text-[8px] font-black px-2 py-1 rounded-lg border border-primary/10 uppercase tracking-tighter">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
                 <CardFooter className="p-8 pt-0">
