@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback ,useMemo} from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Plus, Users, Trash2, Image as ImageIcon, Calendar } from "lucide-react";
+import { Plus, Users, Trash2, Image as ImageIcon, Calendar, CheckSquare, BadgeCheck } from "lucide-react";
 import api from "@/lib/api";
 import { EventForm } from "@/components/organizer/EventForm";
 import { AttendeeManager } from "@/components/organizer/AttendeeManager";
@@ -75,6 +75,36 @@ export const OrganizerDashboard = () => {
       setAlertConfig(prev => ({ ...prev, isVisible: false }));
     } catch (error) {
       console.error("Delete failed", error);
+    }
+  };
+
+  const handleCloseEventClick = (id: string) => {
+    setAlertConfig({
+      isVisible: true,
+      title: "Mark Event as Completed?",
+      description: "This will finalize the event and mark it as successfully completed. Attendees will be notified and the event will be archived.",
+      buttonText: "Yes, Complete Event",
+      variant: "success",
+      icon: <CheckSquare className="h-8 w-8 text-white" />,
+      action: () => executeCloseEvent(id),
+    });
+  };
+
+  const executeCloseEvent = async (id: string) => {
+    try {
+      await api.patch(`/events/${id}/close`);
+      setEvents(events.map(e => e._id === id ? { ...e, status: "completed" } : e));
+      setAlertConfig({
+        isVisible: true,
+        title: "Event Completed! 🎉",
+        description: "The event has been successfully marked as completed. Great work organizing it!",
+        buttonText: "Awesome!",
+        variant: "success",
+        icon: <BadgeCheck className="h-8 w-8 text-white" />,
+        action: () => setAlertConfig(prev => ({ ...prev, isVisible: false })),
+      });
+    } catch (error) {
+      console.error("Close event failed", error);
     }
   };
 
@@ -260,6 +290,20 @@ export const OrganizerDashboard = () => {
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div className="absolute top-4 right-4 flex gap-2">
+                      {event.status === "completed" ? (
+                        <div className="flex items-center gap-1 bg-emerald-500/90 text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg backdrop-blur-sm">
+                          <BadgeCheck className="h-3 w-3" /> Completed
+                        </div>
+                      ) : (
+                        <Button
+                          size="icon"
+                          className="h-8 w-8 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0 bg-emerald-500 hover:bg-emerald-600 border-0"
+                          onClick={() => handleCloseEventClick(event._id)}
+                          title="Mark as Completed"
+                        >
+                          <CheckSquare className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button 
                         size="icon" 
                         variant="destructive" 
@@ -282,19 +326,38 @@ export const OrganizerDashboard = () => {
                         <Users className="h-4 w-4 text-primary" />
                         <span className="text-foreground/80">{event.registeredAttendees.length} Registered</span>
                       </div>
-                      <div className="bg-accent/10 text-accent text-[10px] font-black px-3 py-1 rounded-full border border-accent/20 w-fit flex items-center gap-2">
-                        <Activity className="h-3 w-3" /> 
-                        {getMatchPercentage(event)}% Student Fit
+                      <div className={`text-[10px] font-black px-3 py-1 rounded-full border w-fit flex items-center gap-2 ${
+                        event.status === "completed"
+                          ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                          : "bg-accent/10 text-accent border-accent/20"
+                      }`}>
+                        {event.status === "completed" ? (
+                          <><BadgeCheck className="h-3 w-3" /> Completed</>
+                        ) : (
+                          <><Activity className="h-3 w-3" /> {getMatchPercentage(event)}% Student Fit</>
+                        )}
                       </div>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="rounded-full border-primary/30 hover:bg-primary/10 transition-all active:scale-95"
-                      onClick={() => setSelectedEventId(event._id)}
-                    >
-                      Manage
-                    </Button>
+                    <div className="flex flex-col gap-2 items-end">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="rounded-full border-primary/30 hover:bg-primary/10 transition-all active:scale-95"
+                        onClick={() => setSelectedEventId(event._id)}
+                      >
+                        Manage
+                      </Button>
+                      {event.status !== "completed" && (
+                        <Button
+                          size="sm"
+                          className="rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/30 hover:bg-emerald-500/20 text-[10px] font-black transition-all active:scale-95 h-7 px-3"
+                          variant="ghost"
+                          onClick={() => handleCloseEventClick(event._id)}
+                        >
+                          <CheckSquare className="h-3 w-3 mr-1" /> Close Event
+                        </Button>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
