@@ -6,6 +6,8 @@ import connectDB from "./config/db";
 import eventRoutes from "./routes/eventRoutes";
 import userRoutes from "./routes/userRoutes";
 import recommendationRoutes from "./routes/recommendationRoutes";
+import authRoutes from "./routes/authRoutes";
+import notificationRoutes from "./routes/notificationRoutes";
 
 dotenv.config();
 
@@ -21,9 +23,11 @@ app.use(express.json());
 connectDB();
 
 // Routes
+app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/recommendations", recommendationRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // Basic Route
 app.get("/", (req, res) => {

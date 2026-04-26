@@ -10,6 +10,8 @@ export interface IEvent extends Document {
   capacity: number;
   registeredAttendees: mongoose.Types.ObjectId[];
   status: "upcoming" | "ongoing" | "completed" | "cancelled";
+  posterUrl?: string;
+  blacklistedUsers: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,6 +31,8 @@ const EventSchema: Schema = new Schema(
       enum: ["upcoming", "ongoing", "completed", "cancelled"],
       default: "upcoming",
     },
+    posterUrl: { type: String },
+    blacklistedUsers: [{ type: Schema.Types.ObjectId, ref: "User" }],
   },
   { timestamps: true }
 );
