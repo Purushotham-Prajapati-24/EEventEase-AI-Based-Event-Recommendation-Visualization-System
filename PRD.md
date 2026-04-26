@@ -1,56 +1,49 @@
-1. Product Requirements Document (PRD)
-🎯 Product Overview
+# 1. Product Requirements Document (PRD)
 
-EventEase is an AI-assisted event recommendation platform designed for students at VNR Vignana Jyothi Institute of Engineering and Technology.
-It helps users discover relevant events using interest-based scoring and popularity metrics, combined with visual insights for better decision-making.
+## 🎯 Product Overview
+**EventEase** is a high-performance, AI-assisted event recommendation and visualization platform specifically engineered for university students. By leveraging intelligent scoring algorithms and real-time social features, it transforms the fragmented event discovery process into a personalized, data-driven journey.
 
-❗ Problem Statement
+## ❗ Problem Statement
+University students often experience:
+- **Information Overload**: Constant noise from multiple club announcements across various channels.
+- **Generic Experience**: No personalized curation, leading to missed opportunities in niche interests.
+- **Static Discovery**: Lack of real-time interaction or visibility into trending campus activities.
 
-Students face:
+## 💡 Proposed Solution
+A centralized ecosystem that:
+- **Analyzes**: Uses interest-based scoring and popularity metrics to rank events.
+- **Visualizes**: Provides dynamic dashboards (Radar, Bar, Line charts) for trend analysis.
+- **Connects**: Facilitates real-time community interaction through dedicated event chats.
+- **Explains**: Offers AI-driven transparency into why an event is recommended.
 
-Information overload due to multiple event announcements
-Lack of personalization
-No visibility into:
-Event popularity
-Trends
-Relevance
-💡 Proposed Solution
+## 👥 Target Users
+- **Students**: Seeking relevant workshops, hackathons, and cultural fests.
+- **Organizers**: Looking to maximize reach and manage attendee engagement.
+- **Administration**: Gaining insights into campus engagement trends.
 
-A system that:
+## ⚙️ Core Features
 
-Recommends events using interest + popularity scoring
-Provides visual dashboards
-Explains recommendations (AI transparency)
-👥 Target Users
-Undergraduate students
-Event organizers
-College administration
-⚙️ Core Features
-1. Interest-Based Personalization
-Users select interests:
-Coding
-Tech
-Dance
-Management
-2. AI Recommendation Engine
-Interest Match
-Match Score = (Matched Tags / Total Interests) * 100
-Popularity Factor
-Registrations count
-Ratings
-Final Score
-Final Score = Match Score + Popularity Weight
-3. Visualization Dashboard
-🎯 Interest Match Chart
-🔥 Trending Events Graph
-📅 Event Timeline View
-4. Explainable Recommendations
+### 1. Advanced Personalization & Onboarding
+- **Interest Curation**: Guided onboarding flow to select niche tags (Coding, Finance, Art, etc.).
+- **Social suggestions**: "People You May Know" module suggesting connections based on common interests.
 
-Example:
+### 2. Intelligent Recommendation Engine
+- **Hybrid Scoring**: Combines **Match Score** (Interest overlap) and **Popularity Weight** (Registration velocity).
+- **Explainable AI (XAI)**: Contextual reasons provided for every recommendation (e.g., *"Matches your interest in Robotics and has high registration velocity"*).
 
-“Recommended because you prefer Tech and this event has high participation.”
+### 3. Real-Time Social Ecosystem
+- **Instant Messaging**: Powered by Socket.IO for direct user-to-user and event-group chats.
+- **Automated Event Channels**: Every event automatically triggers a **Discussion Feed** for attendees and an **Announcements Channel** for organizers.
 
-5. Event Interaction
-View details
-Register
-Rate events
+### 4. Visual Intelligence Dashboard
+- **Interest Radar**: Visualizes how your profile aligns with current campus offerings.
+- **Trending Graph**: Dynamic bar charts showing registration peaks and hot categories.
+
+### 5. Seamless Event Management
+- **Dual-Mode Banner**: Support for external URLs or secure ImageKit cloud uploads.
+- **Attendee Control**: Comprehensive tools for organizers to manage, remove, or blacklist attendees.
+
+## 🛡️ Security & Architecture
+- **Dual-Token Auth**: High-security Access (Memory) and Refresh (HttpOnly Cookie) token architecture.
+- **Serverless Ready**: Optimized for Vercel with a decoupled API/Static architecture.
+- **Real-Time Guard**: Socket.io middleware for secure personal and group room joining.

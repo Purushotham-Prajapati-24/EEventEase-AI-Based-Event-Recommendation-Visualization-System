@@ -1,99 +1,112 @@
-# EventEase: AI-Powered Event Recommendation Platform
+# EventEase: AI-Powered Event Recommendation & Community Platform
 
-![Logo](https://raw.githubusercontent.com/lucide-react/lucide/main/icons/calendar-heart.svg)
+![Banner](https://raw.githubusercontent.com/lucide-react/lucide/main/icons/calendar-heart.svg)
 
-**EventEase** is a production-grade, AI-driven event discovery and recommendation system tailored for college campuses. It leverages advanced reasoning models to connect students with events that match their interests, skills, and social preferences.
-
-## 🚀 Features
-
-- **AI-Driven Discovery**: Personalized event recommendations using Groq-powered AI analysis.
-- **Smart Dashboard**: Role-based access for Students, Organizers, and Admins.
-- **Dynamic Event Management**: Real-time event tracking, registration, and capacity management.
-- **Modern UI/UX**: Built with React, Tailwind CSS, and Shadcn UI for a premium, accessible experience.
-- **Secure Authentication**: Robust JWT-based authentication with role-protected routes.
+**EventEase** is a production-grade, AI-driven event discovery and real-time social ecosystem designed for modern university campuses. It leverages advanced reasoning models to connect students with meaningful opportunities while providing a seamless, real-time communication layer.
 
 ---
 
-## 📸 Platform Walkthrough
+## 🚀 Key Features
 
-### 1. Discovery & Personalization
-Explore all campus events. Once logged in, the AI analyzes your interests to provide curated recommendations.
+### 🧠 AI-Powered Curation
+- **Weighted Match Scoring**: Intelligent ranking based on user interests, historical engagement, and registration velocity.
+- **Explainable Recommendations**: Transparent AI insights (powered by Groq/Llama-3) that explain *why* an event was suggested.
+- **Dynamic Radar Charts**: Real-time visualization of your interest alignment across campus categories.
 
-![Discovery Unauthenticated](docs/screenshots/01_discovery_unauthenticated.png)
-*Initial view for guest users*
+### 💬 Real-Time Social Engine
+- **Unified Messaging**: Seamless peer-to-peer and group chat infrastructure powered by **Socket.IO**.
+- **Automated Event Channels**: Dedicated **Discussion** (for students) and **Announcement** (for organizers) channels for every event.
+- **Social Suggestions**: A "People You May Know" discovery engine that connects students sharing similar academic and extracurricular interests.
 
-![Discovery Authenticated](docs/screenshots/04_discovery_authenticated.png)
-*AI-personalized recommendations for logged-in students*
+### 📱 Premium Onboarding & UI/UX
+- **Multi-Step Onboarding**: High-fidelity flow for interest curation and profile customization (Bio + Cloud-hosted Avatars).
+- **Responsive Design**: Mobile-first architecture using **React 19** and **Tailwind CSS v4**.
+- **Visual Intelligence**: Interactive dashboards using **GSAP** animations and **Recharts** for trend analysis.
 
-### 2. Seamless Registration
-Fast and intuitive onboarding with interest-based profiling.
-
-![Register Page](docs/screenshots/02_register_page.png)
-*Comprehensive user profiling*
-
-### 3. Student Dashboard
-Manage your registrations and see top picks at a glance.
-
-![Dashboard](docs/screenshots/11_dashboard_student.png)
-*Personalized command center*
-
-### 4. Organizer View
-Specialized tools for campus event planners.
-
-![Organizer View](docs/screenshots/10_organizer_view.png)
-*Administrative access for event management*
+### 🛠️ Organizer Command Center
+- **Advanced Management**: Tools to track registrations, manage attendance, and blacklist users for secure event hosting.
+- **Flexible Content**: Dual-mode banner system supporting cloud uploads via **ImageKit** or external URL integration.
 
 ---
 
 ## 🛠️ Technology Stack
 
-| Layer | Technology |
+| Layer | Technologies |
 |---|---|
-| **Frontend** | React 19, TypeScript, Redux Toolkit, React Router 7 |
-| **Styling** | Tailwind CSS 4, Shadcn UI, Lucide Icons |
-| **Backend** | Node.js, Express 5, Mongoose |
-| **AI/ML** | Groq SDK (Llama-3-70b-versatile) |
-| **Database** | MongoDB Atlas |
-| **Auth** | JWT (JSON Web Tokens), Bcrypt.js |
+| **Frontend** | React 19, Redux Toolkit, Framer Motion, Recharts, GSAP |
+| **Backend** | Node.js, Express.js (TypeScript), Socket.IO |
+| **Database** | MongoDB Atlas, Mongoose ODM |
+| **Media** | ImageKit.io (Cloud Storage & Transformation) |
+| **AI Layer** | Groq SDK (Llama-3-70b-versatile) |
+| **Auth** | Dual-Token (Access + Refresh) Architecture with HttpOnly Cookies |
+| **Hosting** | Vercel (Optimized Serverless Integration) |
 
 ---
 
-## 📦 Getting Started
+## 📸 Platform Walkthrough
+
+### 1. High-Fidelity Onboarding
+Personalize your experience from second one. Pick your niche interests and set up your campus identity.
+![Onboarding](docs/screenshots/02_register_page.png)
+
+### 2. AI Spotlight Dashboard
+Your personalized command center showing your interest radar and top picks.
+![Dashboard](docs/screenshots/11_dashboard_student.png)
+
+### 3. Real-Time Chat & Community
+Connect with peers and stay updated with official event announcements instantly.
+![Chat](docs/screenshots/01_discovery_unauthenticated.png)
+
+---
+
+## 📦 Installation & Setup
 
 ### Prerequisites
 - Node.js (v18+)
 - MongoDB Atlas Account
 - Groq API Key
+- ImageKit Credentials
 
-### Installation
+### 1. Clone the repository
+```bash
+git clone https://github.com/Purushotham-Prajapati-24/EEventEase-AI-Based-Event-Recommendation-Visualization-System.git
+cd EEventEase-AI-Based-Event-Recommendation-Visualization-System
+```
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Purushotham-Prajapati-24/EEventEase-AI-Based-Event-Recommendation-Visualization-System.git
-   cd EEventEase-AI-Based-Event-Recommendation-Visualization-System
-   ```
+### 2. Configure Backend
+```bash
+cd backend
+npm install
+# Create a .env file:
+# PORT=5000
+# MONGO_URI=your_mongodb_uri
+# JWT_SECRET=your_secret
+# REFRESH_TOKEN_SECRET=your_refresh_secret
+# GROQ_API_KEY=your_key
+# IMAGEKIT_PUBLIC_KEY=your_key
+# IMAGEKIT_PRIVATE_KEY=your_key
+# IMAGEKIT_URL_ENDPOINT=your_endpoint
+npm run dev
+```
 
-2. **Setup Backend**
-   ```bash
-   cd backend
-   npm install
-   # Create .env file with PORT, MONGO_URI, JWT_SECRET, and GROQ_API_KEY
-   npm run dev
-   ```
-
-3. **Setup Frontend**
-   ```bash
-   cd ../frontend
-   npm install
-   npm run dev
-   ```
+### 3. Configure Frontend
+```bash
+cd ../frontend
+npm install
+# Create a .env file:
+# VITE_API_URL=/api
+# VITE_BACKEND_URL=http://localhost:5000
+# VITE_IMAGEKIT_PUBLIC_KEY=your_key
+# VITE_IMAGEKIT_URL_ENDPOINT=your_endpoint
+npm run dev
+```
 
 ---
 
 ## 🛡️ Security & Performance
-- **Data Protection**: Industry-standard encryption for passwords and sensitive data.
-- **Performance**: Optimized asset delivery and state management via Redux Toolkit.
-- **Accessibility**: WCAG-compliant UI components and semantic HTML.
+- **XSS Protection**: Refresh tokens stored in `HttpOnly` cookies.
+- **Serverless Optimized**: Cleanly decoupled API routes for Vercel deployment.
+- **Data Integrity**: Schema-level validation and comprehensive error handling.
 
 ---
 
