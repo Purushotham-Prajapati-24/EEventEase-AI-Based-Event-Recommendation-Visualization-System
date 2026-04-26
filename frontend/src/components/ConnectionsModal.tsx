@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { X, UserPlus, UserMinus, MessageSquare, Users } from "lucide-react";
+import { X, UserPlus, UserMinus, Users } from "lucide-react";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";

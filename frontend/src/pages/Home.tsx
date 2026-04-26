@@ -6,17 +6,13 @@ import type { RootState } from "@/store";
 import { Button } from "@/components/ui/button";
 import { Zap, Target, TrendingUp, Sparkles } from "lucide-react";
 import gsap from "gsap";
-import { PixelTrail } from "@/components/ui/pixel-trail";
-import { GooeyFilter } from "@/components/ui/gooey-filter";
 import { DotPattern } from "@/components/ui/dot-pattern-1";
-import { useScreenSize } from "@/hooks/use-screen-size";
 
 export const Home = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const heroRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const visionRef = useRef<HTMLDivElement>(null);
-  const screenSize = useScreenSize();
 
   useEffect(() => {
     const ctx = gsap.context(() => {

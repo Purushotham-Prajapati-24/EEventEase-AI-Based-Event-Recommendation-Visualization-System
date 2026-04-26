@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Check, Target, ArrowRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Check, Target, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/store";

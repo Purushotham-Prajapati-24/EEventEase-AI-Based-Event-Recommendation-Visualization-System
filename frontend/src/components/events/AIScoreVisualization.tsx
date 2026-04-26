@@ -1,5 +1,4 @@
-import React from "react";
-import { Brain, Users, Sparkles } from "lucide-react";
+import { Brain, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface AIScoreVisualizationProps {
@@ -22,7 +21,7 @@ export const AIScoreVisualization = ({
   breakdown
 }: AIScoreVisualizationProps) => {
   return (
-    <div className="space-y-8 p-10 bg-white rounded-[40px] border border-border shadow-xl shadow-slate-200/50 relative overflow-hidden">
+    <div className="space-y-8 p-10 bg-card/40 backdrop-blur-xl rounded-[40px] border border-primary/10 shadow-xl relative overflow-hidden">
       {/* Decorative Background Elements */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl pointer-events-none" />
@@ -37,7 +36,7 @@ export const AIScoreVisualization = ({
             <p className="text-[10px] text-muted-foreground font-bold mt-1 uppercase tracking-tight">Personalized Student Interest Analysis</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 px-6 py-3 bg-foreground text-white rounded-2xl shadow-lg shadow-slate-200">
+        <div className="flex items-center gap-3 px-6 py-3 bg-primary text-primary-foreground rounded-2xl shadow-lg">
           <Sparkles className="h-5 w-5 text-primary animate-pulse" />
           <span className="text-lg font-black italic tracking-tighter">{Math.round(overallScore)}% Sync</span>
         </div>
@@ -53,7 +52,7 @@ export const AIScoreVisualization = ({
             </div>
             <span className="text-2xl font-black italic text-primary">{Math.round(matchScore)}%</span>
           </div>
-          <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner p-1">
+          <div className="h-4 w-full bg-primary/5 rounded-full overflow-hidden shadow-inner p-1">
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: `${matchScore}%` }}
@@ -88,7 +87,7 @@ export const AIScoreVisualization = ({
             </div>
             <span className="text-2xl font-black italic text-secondary">{Math.round(popularityScore)}%</span>
           </div>
-          <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner p-1">
+          <div className="h-4 w-full bg-primary/5 rounded-full overflow-hidden shadow-inner p-1">
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: `${popularityScore}%` }}
@@ -102,9 +101,9 @@ export const AIScoreVisualization = ({
         </div>
       </div>
 
-      <div className="pt-8 border-t-2 border-slate-50 mt-4 relative z-10">
+      <div className="pt-8 border-t-2 border-primary/5 mt-4 relative z-10">
         <div className="flex items-start gap-5">
-          <div className="h-12 w-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-primary shrink-0 shadow-sm">
+          <div className="h-12 w-12 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-center text-primary shrink-0 shadow-sm">
             <Sparkles className="h-6 w-6" />
           </div>
           <div className="space-y-1">

@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/store";
 import { fetchNotifications, markRead } from "@/store/slices/notificationsSlice";
 import { Button } from "@/components/ui/button";
-import { Bell, Mail, Info, Check, CheckCircle2, UserPlus, Megaphone } from "lucide-react";
+import { Bell, Mail, Info, CheckCircle2, UserPlus, Megaphone } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export const NotificationCenter = () => {

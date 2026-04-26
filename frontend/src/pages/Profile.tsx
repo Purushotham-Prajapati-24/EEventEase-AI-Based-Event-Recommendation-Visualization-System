@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../store";
@@ -24,6 +24,7 @@ import { DotPattern } from "../components/ui/dot-pattern-1";
 import { ProfileEditModal } from "../components/ProfileEditModal";
 import { ConnectionsModal } from "../components/ConnectionsModal";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import type { User, EventData } from "../types";
 
 const Profile = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,7 +35,7 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState<"events" | "analytics" | "following">("events");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [connectionsModal, setConnectionsModal] = useState<{isOpen: boolean, type: "followers" | "following"}>({isOpen: false, type: "followers"});
-  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<User[]>([]);
 
   const isOwnProfile = currentUser?._id === id;
 
@@ -48,8 +49,8 @@ const Profile = () => {
   useEffect(() => {
     if (isOwnProfile && currentUser?._id) {
       import("../lib/api").then(({ default: api }) => {
-        api.get("/users/suggestions").then((data: any) => {
-          if (Array.isArray(data)) setSuggestions(data);
+        api.get("/users/suggestions").then((data) => {
+          if (Array.isArray(data)) setSuggestions(data as User[]);
         }).catch(() => {});
       });
     }
@@ -139,8 +140,9 @@ const Profile = () => {
                           const chat = await dispatch(accessChat(currentProfile._id)).unwrap();
                           dispatch(setActiveChat(chat));
                           navigate("/chat");
-                        } catch (error: any) {
-                          alert(error.message || "Could not start chat. You must follow each other.");
+                        } catch (error) {
+                          const err = error as { message?: string };
+                          alert(err.message || "Could not start chat. You must follow each other.");
                         }
                       }}
                     >
@@ -311,7 +313,7 @@ const Profile = () => {
                 <div className="min-h-[400px]">
                   {activeTab === "events" && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {(currentProfile.role === "organizer" ? currentProfile.organizedEvents : currentProfile.registeredEvents)?.map((event: any) => (
+                      {(currentProfile.role === "organizer" ? currentProfile.organizedEvents : currentProfile.registeredEvents)?.map((event: EventData) => (
                         <motion.div 
                           key={event._id}
                           initial={{ opacity: 0, scale: 0.95 }}
@@ -374,7 +376,7 @@ const Profile = () => {
                               <div className="mt-6 pt-4 border-t border-primary/10 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                   <Activity className="h-3 w-3 text-primary" />
-                                  <span className="text-[9px] font-black uppercase text-muted-foreground">Engagement: {Math.floor(Math.random() * 40 + 60)}%</span>
+                                  <span className="text-[9px] font-black uppercase text-muted-foreground">Engagement: {((event._id.split('').reduce((acc: number, c: string) => acc + c.charCodeAt(0), 0)) % 40) + 60}%</span>
                                 </div>
                                 <Button variant="link" className="h-auto p-0 text-[10px] font-black uppercase tracking-widest">
                                   Manage →

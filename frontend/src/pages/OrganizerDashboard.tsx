@@ -10,7 +10,7 @@ import { CheckCircle2, AlertTriangle, TrendingUp, Activity, BarChart3 } from "lu
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, 
-  CartesianGrid, Cell, PieChart, Pie
+  CartesianGrid, Cell
 } from "recharts";
 
 export const OrganizerDashboard = () => {
@@ -215,7 +215,7 @@ export const OrganizerDashboard = () => {
                     contentStyle={{ backgroundColor: 'var(--card)', borderRadius: '12px', border: '1px solid var(--primary)', fontSize: '10px' }}
                   />
                   <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                    {analyticsData.chartData.map((entry, index) => (
+                    {analyticsData.chartData.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} fillOpacity={0.8} />
                     ))}
                   </Bar>

@@ -1,12 +1,12 @@
-import * as React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React from "react";
+import { motion, AnimatePresence, type HTMLMotionProps, type Variants } from "framer-motion";
 import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 // Define the props for the AlertCard component
-interface AlertCardProps extends React.HTMLAttributes<HTMLDivElement> {
+interface AlertCardProps extends Omit<HTMLMotionProps<"div">, "title"> {
   icon?: React.ReactNode;
   title: string;
   description: string;
@@ -32,7 +32,7 @@ const AlertCard = React.forwardRef<HTMLDivElement, AlertCardProps>(
   }, ref) => {
     
     // Animation variants for the card container
-    const cardVariants: any = {
+    const cardVariants: Variants = {
       hidden: { opacity: 0, y: 50, scale: 0.95 },
       visible: { 
         opacity: 1, 

@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
 import User from "../models/User";
+import Event from "../models/Event";
 import Notification from "../models/Notification";
 
 export const getUsers = async (req: Request, res: Response) => {
@@ -26,8 +27,12 @@ export const getUserById = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "User not found" });
     }
     res.status(200).json(user);
-  } catch (error) {
-    res.status(500).json({ message: "Failed to fetch user", error });
+  } catch (error: any) {
+    console.error("Error in getUserById:", error);
+    res.status(500).json({ 
+      message: "Failed to fetch user", 
+      error: error.message || "Internal Server Error" 
+    });
   }
 };
 

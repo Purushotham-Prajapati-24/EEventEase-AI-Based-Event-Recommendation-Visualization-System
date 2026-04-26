@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Target, Sparkles, Zap, Activity, Users } from "lucide-react";
+import { Target } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 

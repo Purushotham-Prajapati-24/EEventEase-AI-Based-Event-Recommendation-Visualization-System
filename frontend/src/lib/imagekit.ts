@@ -1,6 +1,6 @@
 import api from "./api";
 
-const IMAGEKIT_URL_ENDPOINT = "https://ik.imagekit.io/6odkn6h4q";
+
 const IMAGEKIT_PUBLIC_KEY = "public_PAxx6+obQLdTPblXLxJPCuMY1Lo=";
 
 export const uploadImage = async (file: File): Promise<string> => {

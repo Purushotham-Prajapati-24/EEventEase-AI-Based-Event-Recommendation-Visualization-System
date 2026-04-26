@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { motion } from "framer-motion";
 import { Check, Target, ChevronRight } from "lucide-react";
 import { Button } from "./ui/button";
 import { useDispatch, useSelector } from "react-redux";
@@ -30,7 +30,7 @@ export const OnboardingInterests = () => {
     if (!user) return;
     setIsSubmitting(true);
     try {
-      const response = await api.put(`/users/${user._id}`, { interests: selected });
+      await api.put(`/users/${user._id}`, { interests: selected });
       dispatch(setUser({ ...user, interests: selected }));
     } catch (error) {
       console.error("Failed to save interests:", error);
