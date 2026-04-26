@@ -7,6 +7,7 @@ export interface IEvent extends Document {
   date: Date;
   location: string;
   tags: string[];
+  club: string;
   capacity: number;
   registeredAttendees: mongoose.Types.ObjectId[];
   status: "upcoming" | "ongoing" | "completed" | "cancelled";
@@ -24,6 +25,7 @@ const EventSchema: Schema = new Schema(
     date: { type: Date, required: true },
     location: { type: String, required: true },
     tags: [{ type: String }],
+    club: { type: String, required: true },
     capacity: { type: Number, required: true },
     registeredAttendees: [{ type: Schema.Types.ObjectId, ref: "User" }],
     status: {
@@ -33,6 +35,8 @@ const EventSchema: Schema = new Schema(
     },
     posterUrl: { type: String },
     blacklistedUsers: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    discussionChat: { type: Schema.Types.ObjectId, ref: "Chat" },
+    announcementChat: { type: Schema.Types.ObjectId, ref: "Chat" },
   },
   { timestamps: true }
 );

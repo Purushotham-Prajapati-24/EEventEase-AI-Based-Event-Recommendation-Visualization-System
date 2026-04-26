@@ -1,0 +1,11 @@
+import express from "express";
+import { accessChat, fetchChats, fetchMessages } from "../controllers/chatController";
+import { protect } from "../middleware/authMiddleware";
+
+const router = express.Router();
+
+router.post("/", protect, accessChat);
+router.get("/", protect, fetchChats);
+router.get("/:chatId/messages", protect, fetchMessages);
+
+export default router;

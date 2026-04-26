@@ -39,12 +39,20 @@ export const EventForm = ({ onSuccess, onCancel }: EventFormProps) => {
     },
   });
 
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const onSubmit = async (values: z.infer<typeof eventSchema>) => {
     try {
+      setIsSubmitting(true);
+      setError(null);
       await api.post("/events", { ...values, posterUrl });
       onSuccess();
-    } catch (error) {
-      console.error("Failed to create event", error);
+    } catch (err: any) {
+      console.error("Failed to create event", err);
+      setError(err.message || "Failed to create event. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -163,6 +171,24 @@ export const EventForm = ({ onSuccess, onCancel }: EventFormProps) => {
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="capacity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2"><UsersIcon className="h-4 w-4 text-primary" /> Max Capacity</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          className="rounded-xl border-primary/20 focus-visible:ring-primary" 
+                          {...field} 
+                          onChange={(e) => field.onChange(parseInt(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <FormField
@@ -183,9 +209,32 @@ export const EventForm = ({ onSuccess, onCancel }: EventFormProps) => {
                 )}
               />
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-primary/10">
-                <Button type="button" variant="ghost" onClick={onCancel} className="rounded-full">Cancel</Button>
-                <Button type="submit" className="rounded-full px-8 bg-accent hover:bg-accent/90 text-white shadow-xl">Create Event</Button>
+              {error && (
+                <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium animate-in slide-in-from-top-2 duration-300">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex justify-between items-center pt-4 border-t border-primary/10">
+                <div className="flex items-center gap-2 text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  SSL Secure Submission
+                </div>
+                <div className="flex gap-3">
+                  <Button type="button" variant="ghost" onClick={onCancel} className="rounded-full">Cancel</Button>
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting || isUploading}
+                    className="rounded-full px-8 bg-accent hover:bg-accent/90 text-white shadow-xl min-w-[140px]"
+                  >
+                    {isSubmitting ? (
+                      <span className="flex items-center gap-2">
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                        Creating...
+                      </span>
+                    ) : "Create Event"}
+                  </Button>
+                </div>
               </div>
             </form>
           </Form>

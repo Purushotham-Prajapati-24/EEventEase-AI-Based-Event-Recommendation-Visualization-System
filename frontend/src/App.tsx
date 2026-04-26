@@ -10,6 +10,8 @@ import { Discovery } from "./pages/Discovery"
 import { EventDetails } from "./pages/EventDetails"
 import { Dashboard } from "./pages/Dashboard"
 import { OrganizerDashboard } from "./pages/OrganizerDashboard"
+import Profile from "./pages/Profile"
+import Chat from "./pages/Chat"
 import { NotFound } from "./pages/NotFound"
 
 gsap.registerPlugin(ScrollTrigger);
@@ -59,6 +61,8 @@ function App() {
           <Route path="/organizer" element={<OrganizerDashboard />} />
           <Route path="/organizer/analytics" element={<OrganizerAnalytics />} />
           <Route path="/admin/insights" element={<AIInsights />} />
+          <Route path="/profile/:id" element={<Profile />} />
+          <Route path="/chat" element={<Chat />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </RootLayout>

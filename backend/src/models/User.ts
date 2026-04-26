@@ -7,6 +7,10 @@ export interface IUser extends Document {
   role: "student" | "organizer" | "admin";
   interests: string[];
   registeredEvents: mongoose.Types.ObjectId[];
+  profileImage: string;
+  bio: string;
+  followers: mongoose.Types.ObjectId[];
+  following: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,6 +27,15 @@ const UserSchema: Schema = new Schema(
     },
     interests: [{ type: String }],
     registeredEvents: [{ type: Schema.Types.ObjectId, ref: "Event" }],
+    profileImage: { type: String, default: "" },
+    bio: { type: String, default: "" },
+    followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    following: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    roleMetadata: {
+      totalAttended: { type: Number, default: 0 },
+      totalOrganized: { type: Number, default: 0 },
+      averageRating: { type: Number, default: 0 },
+    },
   },
   { timestamps: true }
 );
