@@ -7,24 +7,40 @@ export interface User {
   bio?: string;
   location?: string;
   interests?: string[];
-  followers: string[];
-  following: string[];
+  followers: (string | User)[];
+  following: (string | User)[];
+  createdAt: string;
+  roleMetadata?: {
+    totalAttended?: number;
+    averageRating?: number;
+    totalOrganized?: number;
+  };
   organizedEvents?: EventData[];
   registeredEvents?: EventData[];
 }
 
+
 export interface EventData {
+  blacklistedUsers: any[];
   _id: string;
   title: string;
   description: string;
   date: string;
-  time: string;
+  time?: string;
   location: string;
-  category: string;
+  club: string;
   posterUrl?: string;
   capacity: number;
-  registeredAttendees: string[];
+  interests: string[];
+  registeredAttendees: (User | string)[];
   organizer: string | User;
   status: "upcoming" | "ongoing" | "completed" | "cancelled";
-  tags: string[];
+  category?: string;
+  tags?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+  discussionChat?: string;
+  announcementChat?: string;
 }
+
+

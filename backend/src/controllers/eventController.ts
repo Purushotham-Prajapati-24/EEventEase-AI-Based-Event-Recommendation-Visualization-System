@@ -14,7 +14,10 @@ export const getEvents = async (req: Request, res: Response) => {
 
 export const getEventById = async (req: Request, res: Response) => {
   try {
-    let event = await Event.findById(req.params.id).populate("organizer", "name email");
+    let event = await Event.findById(req.params.id)
+      .populate("organizer", "name email")
+      .populate("registeredAttendees", "name email profileImage interests")
+      .populate("blacklistedUsers", "name email");
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
@@ -78,7 +81,7 @@ export const createEvent = async (req: Request, res: Response) => {
 export const getOrganizerEvents = async (req: Request, res: Response) => {
   try {
     const events = await Event.find({ organizer: (req as any).user.id })
-      .populate("registeredAttendees", "interests");
+      .populate("registeredAttendees", "name email interests");
     res.status(200).json(events);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch your events", error });

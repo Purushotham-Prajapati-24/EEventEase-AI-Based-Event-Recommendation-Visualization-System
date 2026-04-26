@@ -47,9 +47,15 @@ export const EventDetails = () => {
   if (isError) return <div className="p-8 text-center text-red-500">Error: {message}</div>;
   if (!event) return <div className="p-8 text-center">Event not found.</div>;
 
-  const isRegistered = user && event.registeredAttendees?.includes(user._id);
+  const isRegistered = user && event.registeredAttendees?.some((attendee: any) => 
+    typeof attendee === 'string' ? attendee === user._id : attendee._id === user._id
+  );
   const isFull = (event.registeredAttendees?.length || 0) >= event.capacity;
-  const isOrganizer = user && event.organizer?._id === user._id;
+  const isOrganizer = user && (
+    typeof event.organizer === 'string' 
+      ? event.organizer === user._id 
+      : event.organizer?._id === user._id
+  );
 
   return (
     <div className="min-h-screen bg-background pt-24 pb-20 px-8">
@@ -126,7 +132,7 @@ export const EventDetails = () => {
                         />
                       )}
                       <div className="flex flex-wrap gap-3">
-                        {event.tags.map(tag => (
+                        {event.tags?.map(tag => (
                           <span key={tag} className="bg-primary/5 border border-primary/10 text-primary text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">
                             {tag}
                           </span>
@@ -289,13 +295,13 @@ export const EventDetails = () => {
             {/* Organizer Context */}
             <div className="glass p-8 rounded-[32px] border-primary/5 flex items-center gap-4 group cursor-pointer hover:border-primary/20 transition-all">
               <div className="h-14 w-14 rounded-2xl bg-slate-800 overflow-hidden shadow-xl border border-primary/10 group-hover:scale-105 transition-transform">
-                <img src={`https://i.pravatar.cc/150?u=${event.organizer?._id}`} alt="organizer" />
+                <img src={`https://i.pravatar.cc/150?u=${typeof event.organizer === 'string' ? event.organizer : event.organizer?._id}`} alt="organizer" />
               </div>
               <div className="flex-1">
                 <p className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Organizer</p>
-                <h4 className="font-black italic text-lg leading-none">{event.organizer?.name}</h4>
+                <h4 className="font-black italic text-lg leading-none">{typeof event.organizer === 'string' ? 'Organizer' : event.organizer?.name}</h4>
               </div>
-              <Link to={`/profile/${event.organizer?._id}`}>
+              <Link to={`/profile/${typeof event.organizer === 'string' ? event.organizer : event.organizer?._id}`}>
                 <ArrowLeftIcon className="h-5 w-5 text-muted-foreground rotate-180 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>

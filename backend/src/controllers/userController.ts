@@ -125,17 +125,58 @@ export const getSuggestedUsers = async (req: any, res: Response) => {
 
 export const getUserConnections = async (req: Request, res: Response) => {
   try {
-    const user = await User.findById(req.params.id)
-      .populate("followers", "name profileImage role")
-      .populate("following", "name profileImage role");
+    const { id } = req.params;
+    if (typeof id !== 'string' || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    const user = await User.findById(id)
+      .populate("followers", "name profileImage role bio")
+      .populate("following", "name profileImage role bio");
       
     if (!user) return res.status(404).json({ message: "User not found" });
 
+    // Ensure we don't return nulls if populate failed for some reason
+    const followers = user.followers.filter(f => f !== null);
+    const following = user.following.filter(f => f !== null);
+
     res.status(200).json({
-      followers: user.followers,
-      following: user.following
+      followers,
+      following
     });
   } catch (error) {
+    console.error("Error in getUserConnections:", error);
     res.status(500).json({ message: "Failed to fetch connections", error });
+  }
+};
+
+export const deleteUser = async (req: any, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    // Only allow users to delete their own account or admins
+    if (req.user.id !== id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Not authorized to delete this account" });
+    }
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Remove user references from others
+    await User.updateMany({ following: id }, { $pull: { following: id } });
+    await User.updateMany({ followers: id }, { $pull: { followers: id } });
+
+    // Remove user from events
+    await Event.updateMany({ registeredAttendees: id }, { $pull: { registeredAttendees: id } });
+    
+    // Actually delete the user
+    await User.findByIdAndDelete(id);
+
+    // Optional: Clean up notifications
+    await Notification.deleteMany({ recipient: id });
+
+    res.status(200).json({ message: "Account successfully deactivated" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to deactivate account", error });
   }
 };

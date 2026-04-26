@@ -1,9 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { fetchWithAuth } from "@/lib/api";
-import type { Event } from "./eventsSlice";
+import type { EventData } from "@/types";
 
 interface Recommendation {
-  event: Event;
+  event: EventData;
   score: number;
   matchScore: number;
   popularityScore: number;

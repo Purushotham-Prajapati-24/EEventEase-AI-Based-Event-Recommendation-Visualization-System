@@ -6,6 +6,7 @@ import type { RootState } from "@/store";
 import { Button } from "@/components/ui/button";
 import { Zap, Target, TrendingUp, Sparkles } from "lucide-react";
 import gsap from "gsap";
+
 import { DotPattern } from "@/components/ui/dot-pattern-1";
 
 export const Home = () => {

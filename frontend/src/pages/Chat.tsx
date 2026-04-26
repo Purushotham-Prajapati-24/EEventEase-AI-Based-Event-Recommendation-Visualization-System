@@ -122,6 +122,12 @@ const Chat = () => {
   const handleSendMessage = () => {
     if (!newMessage.trim() || !socket || !activeChat || !user) return;
 
+    // Check permissions for Announcement channels
+    const isAnnouncement = activeChat.groupName?.toLowerCase().includes("announcement");
+    if (activeChat.isGroupChat && isAnnouncement && !isChatAdmin(activeChat)) {
+      return;
+    }
+
     socket.emit("send-message", {
       chatId: activeChat._id,
       senderId: user._id,
@@ -159,6 +165,13 @@ const Chat = () => {
     }
     const otherParticipant = chat.participants?.find((p: any) => p._id !== user?._id);
     return otherParticipant?.profileImage || `https://i.pravatar.cc/150?u=${chat._id}`;
+  };
+
+  const isChatAdmin = (chat: any) => {
+    if (!chat || !user) return false;
+    const adminId = (chat.groupAdmin?._id || chat.groupAdmin)?.toString();
+    const userId = user._id?.toString();
+    return adminId && userId && adminId === userId;
   };
 
   return (
@@ -332,10 +345,10 @@ const Chat = () => {
               </div>
 
               {/* Input Area */}
-              {activeChat.isGroupChat && activeChat.groupName?.includes("Announcements") && (activeChat.groupAdmin?._id || activeChat.groupAdmin)?.toString() !== user?._id ? (
+              {activeChat.isGroupChat && activeChat.groupName?.includes("Announcements") && !isChatAdmin(activeChat) ? (
                 <div className="p-6 glass m-4 rounded-[32px] border-secondary/20 bg-secondary/5 flex items-center justify-center gap-3 text-secondary">
                   <Megaphone className="h-5 w-5 animate-pulse" />
-                  <p className="text-sm font-black uppercase tracking-widest italic">Only organizers can post in this channel</p>
+                  <p className="text-sm font-black uppercase tracking-widest italic">Only the event organizer can post in this channel</p>
                 </div>
               ) : (
                 <div className="p-4 glass m-4 rounded-[32px] border-primary/10 flex items-center gap-4 bg-background/50 backdrop-blur-xl shadow-2xl">
@@ -401,8 +414,8 @@ const Chat = () => {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-black truncate">{member.name}</p>
-                                <p className={`text-[9px] font-black uppercase tracking-widest ${activeChat.groupAdmin === member._id ? 'text-primary' : 'text-muted-foreground'}`}>
-                                  {activeChat.groupAdmin === member._id ? 'Organizer' : 'Attendee'}
+                                <p className={`text-[9px] font-black uppercase tracking-widest ${(activeChat.groupAdmin?._id || activeChat.groupAdmin)?.toString() === member._id ? 'text-primary' : 'text-muted-foreground'}`}>
+                                  {(activeChat.groupAdmin?._id || activeChat.groupAdmin)?.toString() === member._id ? 'Organizer' : 'Attendee'}
                                 </p>
                               </div>
                               {member._id !== user?._id && (

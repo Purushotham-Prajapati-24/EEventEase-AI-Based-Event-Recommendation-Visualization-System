@@ -1,25 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { fetchWithAuth } from "@/lib/api";
-
-export interface Event {
-  _id: string;
-  title: string;
-  description: string;
-  organizer: any;
-  date: string;
-  location: string;
-  tags: string[];
-  capacity: number;
-  registeredAttendees: string[];
-  status: "upcoming" | "ongoing" | "completed" | "cancelled";
-  posterUrl?: string;
-  discussionChat?: string;
-  announcementChat?: string;
-}
+import type { EventData } from "@/types";
 
 interface EventsState {
-  events: Event[];
-  event: Event | null;
+  events: EventData[];
+  event: EventData | null;
   isLoading: boolean;
   isError: boolean;
   message: string;

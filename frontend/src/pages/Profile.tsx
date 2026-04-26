@@ -5,6 +5,7 @@ import type { RootState, AppDispatch } from "../store";
 import { fetchProfile, followUser, unfollowUser, clearProfile } from "../store/slices/profileSlice";
 import { accessChat, setActiveChat } from "../store/slices/chatSlice";
 import { logout } from "../store/slices/authSlice";
+import api from "../lib/api";
 import { Button } from "../components/ui/button";
 import { 
   Users, 
@@ -48,11 +49,9 @@ const Profile = () => {
 
   useEffect(() => {
     if (isOwnProfile && currentUser?._id) {
-      import("../lib/api").then(({ default: api }) => {
-        api.get("/users/suggestions").then((data) => {
-          if (Array.isArray(data)) setSuggestions(data as User[]);
-        }).catch(() => {});
-      });
+      api.get("/users/suggestions").then((data) => {
+        if (Array.isArray(data)) setSuggestions(data as User[]);
+      }).catch(() => {});
     }
   }, [isOwnProfile, currentUser?._id]);
 
@@ -218,7 +217,6 @@ const Profile = () => {
                     onClick={async () => {
                       if (window.confirm("Are you sure you want to deactivate your account? This action is permanent.")) {
                         try {
-                          const { default: api } = await import("../lib/api");
                           await api.delete(`/users/${currentProfile._id}`);
                           dispatch(logout());
                           navigate("/login");

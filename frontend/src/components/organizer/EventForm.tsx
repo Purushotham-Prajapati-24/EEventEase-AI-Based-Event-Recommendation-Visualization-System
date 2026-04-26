@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { ImagePlus, X, Calendar, MapPin, Users as UsersIcon, FileText, Link as LinkIcon, Upload, Trophy, CheckCircle2, AlertTriangle } from "lucide-react";
+import { ImagePlus, X, Calendar, MapPin, Users as UsersIcon, FileText, Link as LinkIcon, Upload, Trophy, CheckCircle2, AlertTriangle, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api";
 import { uploadImage } from "@/lib/imagekit";
@@ -87,9 +87,9 @@ export const EventForm = ({ onSuccess, onCancel }: EventFormProps) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 overflow-hidden">
-      <Card className="w-full max-w-2xl max-h-[95vh] flex flex-col glass border-primary/30 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
-        <CardHeader className="bg-primary/5 border-b border-primary/10 shrink-0">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-0 sm:p-4 overflow-hidden">
+      <Card className="w-full max-w-2xl h-full sm:h-auto sm:max-h-[90vh] flex flex-col glass border-primary/30 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300 rounded-none sm:rounded-3xl">
+        <CardHeader className="bg-primary/5 border-b border-primary/10 shrink-0 p-6">
           <CardTitle className="text-2xl font-black flex justify-between items-center">
             Create <span className="text-primary">New Event</span>
             <Button variant="ghost" size="icon" onClick={onCancel} className="rounded-full hover:bg-primary/10">
@@ -97,9 +97,9 @@ export const EventForm = ({ onSuccess, onCancel }: EventFormProps) => {
             </Button>
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-0 flex flex-col flex-1 overflow-hidden bg-background/50">
+        <CardContent className="p-0 flex flex-col flex-1 overflow-hidden bg-background/50 relative">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full overflow-hidden">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full min-h-0">
               <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
                 {/* Banner Type Toggle */}
                 <div className="space-y-4">
@@ -276,6 +276,28 @@ export const EventForm = ({ onSuccess, onCancel }: EventFormProps) => {
                       </FormLabel>
                       <FormControl>
                         <div className="space-y-4">
+                          {/* Dropdown-style Selection */}
+                          <div className="relative group">
+                            <select
+                              className="w-full appearance-none rounded-2xl border border-primary/20 bg-primary/5 px-6 py-4 text-sm font-bold focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all cursor-pointer"
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val && !field.value.includes(val)) {
+                                  field.onChange([...field.value, val]);
+                                }
+                                e.target.value = ""; // Reset
+                              }}
+                            >
+                              <option value="" disabled selected>Select an interest...</option>
+                              {INTEREST_OPTIONS.filter(opt => !field.value.includes(opt)).map(opt => (
+                                <option key={opt} value={opt}>{opt}</option>
+                              ))}
+                            </select>
+                            <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">
+                              <Plus className="h-4 w-4" />
+                            </div>
+                          </div>
+
                           <div className="flex flex-wrap gap-2 p-4 min-h-[64px] rounded-2xl border border-primary/10 bg-primary/5 shadow-inner">
                             <AnimatePresence>
                               {field.value?.length > 0 ? (
@@ -303,8 +325,8 @@ export const EventForm = ({ onSuccess, onCancel }: EventFormProps) => {
                             </AnimatePresence>
                           </div>
                           
-                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 h-48 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
-                            {INTEREST_OPTIONS.map((interest) => {
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                            {INTEREST_OPTIONS.slice(0, 8).map((interest) => {
                               const isSelected = field.value?.includes(interest);
                               return (
                                 <button

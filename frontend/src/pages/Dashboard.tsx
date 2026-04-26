@@ -68,7 +68,7 @@ export const Dashboard = () => {
   const trendingData = useMemo(() => {
     const tagCounts: Record<string, number> = {};
     events.forEach(e => {
-      e.tags.forEach(tag => {
+      (e.tags || []).forEach(tag => {
         tagCounts[tag] = (tagCounts[tag] || 0) + 1;
       });
     });

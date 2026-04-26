@@ -5,6 +5,7 @@ import { Plus, Users, Trash2, Image as ImageIcon, Calendar } from "lucide-react"
 import api from "@/lib/api";
 import { EventForm } from "@/components/organizer/EventForm";
 import { AttendeeManager } from "@/components/organizer/AttendeeManager";
+import type { EventData } from "@/types";
 import { AlertCard } from "@/components/ui/alert-card";
 import { CheckCircle2, AlertTriangle, TrendingUp, Activity, BarChart3 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,7 +15,7 @@ import {
 } from "recharts";
 
 export const OrganizerDashboard = () => {
-  const [events, setEvents] = useState<any[]>([]);
+  const [events, setEvents] = useState<EventData[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
@@ -43,7 +44,7 @@ export const OrganizerDashboard = () => {
   const fetchEvents = useCallback(async () => {
     try {
       const response = await api.get("/events/organizer");
-      setEvents(response as any[]);
+      setEvents(response as EventData[]);
     } catch (error) {
       console.error("Failed to fetch events", error);
     } finally {
@@ -98,10 +99,12 @@ export const OrganizerDashboard = () => {
 
     events.forEach(event => {
       totalRegistrations += event.registeredAttendees.length;
-      event.registeredAttendees.forEach((attendee: any) => {
-        attendee.interests?.forEach((interest: string) => {
-          interestCounts[interest] = (interestCounts[interest] || 0) + 1;
-        });
+      event.registeredAttendees.forEach((attendee) => {
+        if (typeof attendee !== 'string') {
+          attendee.interests?.forEach((interest: string) => {
+            interestCounts[interest] = (interestCounts[interest] || 0) + 1;
+          });
+        }
       });
     });
 
@@ -128,7 +131,7 @@ export const OrganizerDashboard = () => {
     return result;
   }, [events, searchQuery, sortBy]);
 
-  const getMatchPercentage = (event: any) => {
+  const getMatchPercentage = (event: EventData) => {
     // Semi-deterministic match based on ID and engagement
     const base = 70;
     const hash = event._id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);

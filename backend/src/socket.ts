@@ -47,8 +47,10 @@ export const initSocket = (httpServer: HttpServer) => {
 
         // If it's an announcement chat, only the admin can post
         if (chat.isGroupChat && chat.groupName?.includes("Announcements")) {
-          if (chat.groupAdmin?.toString() !== senderId) {
-            return socket.emit("error", { message: "Only organizers can post in the Announcements channel" });
+          const adminId = chat.groupAdmin?.toString();
+          if (adminId !== senderId) {
+            console.log(`Permission denied: Sender ${senderId} is not Admin ${adminId} for announcement chat ${chatId}`);
+            return socket.emit("error", { message: "Only the event organizer can post in the Announcements channel" });
           }
         }
 

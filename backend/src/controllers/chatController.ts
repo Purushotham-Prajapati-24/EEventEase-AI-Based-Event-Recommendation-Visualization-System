@@ -18,10 +18,10 @@ export const accessChat = async (req: any, res: Response) => {
     return res.status(404).json({ message: "User not found" });
   }
 
-  const isFollowing = currentUser.following.includes(userId) || currentUser.followers.includes(userId);
+  const isFollowing = currentUser.following.includes(userId) && currentUser.followers.includes(userId);
   
   if (!isFollowing) {
-    return res.status(403).json({ message: "You can only chat with users you follow or who follow you" });
+    return res.status(403).json({ message: "1:1 chat is only available for mutual followers." });
   }
 
   let isChat: any = await Chat.find({
