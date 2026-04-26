@@ -29,10 +29,10 @@ initSocket(server);
 app.use(helmet());
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      process.env.FRONTEND_URL || "*"
-    ],
+    origin: function (origin, callback) {
+      // Allow all origins dynamically to support Vercel -> Render cross-domain
+      callback(null, true);
+    },
     credentials: true,
   })
 );

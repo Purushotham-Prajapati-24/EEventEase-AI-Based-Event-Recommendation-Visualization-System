@@ -10,9 +10,11 @@ export const refreshAccessToken = async () => {
     return refreshPromise;
   }
 
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
+
   refreshPromise = (async () => {
     try {
-      const response = await fetch("/api/auth/refresh", {
+      const response = await fetch(`${BACKEND_URL}/api/auth/refresh`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         // Important: include credentials to send/receive cookies
@@ -56,7 +58,8 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}, isRe
     headers["Authorization"] = `Bearer ${accessToken}`;
   }
 
-  const fullUrl = url.startsWith("/api") ? url : `/api${url}`;
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
+  const fullUrl = url.startsWith("/api") ? `${BACKEND_URL}${url}` : `${BACKEND_URL}/api${url}`;
   
   const response = await fetch(fullUrl, {
     ...options,
