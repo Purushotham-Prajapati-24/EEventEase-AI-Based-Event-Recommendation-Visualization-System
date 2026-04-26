@@ -112,16 +112,16 @@ const Profile = () => {
                 ) : (
                   <>
                     <Button 
-                      className={`rounded-2xl gap-2 ${currentProfile.followers?.includes(currentUser?._id) ? "bg-secondary hover:bg-secondary/90" : ""}`}
+                      className={`rounded-2xl gap-2 h-11 px-6 shadow-lg transition-all active:scale-95 ${currentUser?.following?.includes(currentProfile._id) ? "bg-secondary hover:bg-secondary/90 shadow-secondary/20" : "bg-primary hover:bg-primary/90 shadow-primary/20"}`}
                       onClick={() => {
-                        if (currentProfile.followers?.includes(currentUser?._id)) {
+                        if (currentUser?.following?.includes(currentProfile._id)) {
                           dispatch(unfollowUser({ targetId: currentProfile._id, currentUserId: currentUser!._id }));
                         } else {
                           dispatch(followUser({ targetId: currentProfile._id, currentUserId: currentUser!._id }));
                         }
                       }}
                     >
-                      {currentProfile.followers?.includes(currentUser?._id) ? (
+                      {currentUser?.following?.includes(currentProfile._id) ? (
                         <>
                           <UserMinus className="h-4 w-4" /> Unfollow
                         </>

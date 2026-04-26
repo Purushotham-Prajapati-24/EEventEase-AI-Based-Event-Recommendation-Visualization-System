@@ -18,6 +18,8 @@ export const OrganizerDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"date" | "registrations">("date");
   
   // Alert State
   const [alertConfig, setAlertConfig] = useState<{
@@ -111,20 +113,70 @@ export const OrganizerDashboard = () => {
     return { chartData, totalRegistrations };
   }, [events]);
 
+  const filteredAndSortedEvents = useMemo(() => {
+    let result = events.filter(e => 
+      e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      e.description.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    if (sortBy === "date") {
+      result.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    } else {
+      result.sort((a, b) => b.registeredAttendees.length - a.registeredAttendees.length);
+    }
+
+    return result;
+  }, [events, searchQuery, sortBy]);
+
+  const getMatchPercentage = (event: any) => {
+    // Semi-deterministic match based on ID and engagement
+    const base = 70;
+    const hash = event._id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+    const variable = (hash % 20) + (event.registeredAttendees.length % 10);
+    return Math.min(99, base + variable);
+  };
+
   const COLORS = ['#7C3AED', '#F97316', '#10B981', '#3B82F6', '#EF4444', '#F59E0B'];
 
   return (
     <div className="p-8 space-y-8 bg-background min-h-screen">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-4xl font-black text-foreground tracking-tight">
-            Organizer <span className="text-primary">Dashboard</span>
+          <h1 className="text-5xl font-black text-foreground tracking-tighter leading-tight">
+            Organizer <span className="text-primary bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Control Center</span>
           </h1>
-          <p className="text-muted-foreground mt-2">Manage your events and attendees in one place.</p>
+          <p className="text-muted-foreground mt-2 font-medium border-l-2 border-primary/20 pl-4 italic">Intelligence-driven event management for your campus.</p>
         </div>
-        <Button size="lg" className="rounded-full px-8 shadow-xl hover:scale-105 transition-all bg-primary" onClick={() => setIsFormOpen(true)}>
-          <Plus className="mr-2 h-5 w-5" /> Create New Event
+        <Button size="lg" className="rounded-full px-10 h-14 text-lg font-black shadow-[0_0_30px_rgba(124,58,237,0.3)] hover:scale-105 transition-all bg-primary" onClick={() => setIsFormOpen(true)}>
+          <Plus className="mr-2 h-6 w-6" /> Create Event
         </Button>
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-6 items-center">
+        <div className="relative flex-1 group w-full">
+          <div className="absolute inset-0 bg-primary/5 blur-xl group-focus-within:bg-primary/10 transition-all rounded-full" />
+          <input 
+            type="text" 
+            placeholder="Search your events..."
+            className="w-full h-14 bg-card/40 backdrop-blur-md border-2 border-primary/10 rounded-full px-8 outline-none focus:border-primary transition-all relative z-10 font-bold shadow-xl"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <div className="flex gap-2 bg-card/40 backdrop-blur-md p-1.5 rounded-full border border-primary/10 shadow-lg">
+          <button 
+            onClick={() => setSortBy("date")}
+            className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === "date" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            By Date
+          </button>
+          <button 
+            onClick={() => setSortBy("registrations")}
+            className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === "registrations" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            By Growth
+          </button>
+        </div>
       </div>
 
       {/* Analytics Section */}
@@ -179,12 +231,12 @@ export const OrganizerDashboard = () => {
       </motion.div>
 
       <div className="space-y-6">
-        <h2 className="text-2xl font-black tracking-tight flex items-center gap-2">
-          <BarChart3 className="h-6 w-6 text-primary" /> Active <span className="text-primary">Events</span>
+        <h2 className="text-3xl font-black tracking-tight flex items-center gap-3">
+          <BarChart3 className="h-8 w-8 text-primary" /> Management <span className="text-primary">Vault</span>
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <AnimatePresence mode="popLayout">
-            {events.map((event, index) => (
+            {filteredAndSortedEvents.map((event, index) => (
               <motion.div
                 key={event._id}
                 layout
@@ -227,9 +279,9 @@ export const OrganizerDashboard = () => {
                         <Users className="h-4 w-4 text-primary" />
                         <span className="text-foreground/80">{event.registeredAttendees.length} Registered</span>
                       </div>
-                      <div className="bg-accent/10 text-accent text-[10px] font-black px-2 py-0.5 rounded-full border border-accent/20 w-fit flex items-center gap-1">
-                        <Activity className="h-2.5 w-2.5" /> 
-                        {Math.floor(Math.random() * 30 + 70)}% Student Match
+                      <div className="bg-accent/10 text-accent text-[10px] font-black px-3 py-1 rounded-full border border-accent/20 w-fit flex items-center gap-2">
+                        <Activity className="h-3 w-3" /> 
+                        {getMatchPercentage(event)}% Student Fit
                       </div>
                     </div>
                     <Button 

@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { ImagePlus, X, Calendar, MapPin, Users as UsersIcon, FileText, Link as LinkIcon, Upload, Trophy } from "lucide-react";
+import { ImagePlus, X, Calendar, MapPin, Users as UsersIcon, FileText, Link as LinkIcon, Upload, Trophy, CheckCircle2, AlertTriangle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api";
 import { uploadImage } from "@/lib/imagekit";
 
@@ -86,83 +87,94 @@ export const EventForm = ({ onSuccess, onCancel }: EventFormProps) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <Card className="w-full max-w-2xl glass border-primary/30 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
-        <CardHeader className="bg-primary/5 border-b border-primary/10">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 overflow-hidden">
+      <Card className="w-full max-w-2xl max-h-[95vh] flex flex-col glass border-primary/30 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+        <CardHeader className="bg-primary/5 border-b border-primary/10 shrink-0">
           <CardTitle className="text-2xl font-black flex justify-between items-center">
             Create <span className="text-primary">New Event</span>
-            <Button variant="ghost" size="icon" onClick={onCancel} className="rounded-full">
+            <Button variant="ghost" size="icon" onClick={onCancel} className="rounded-full hover:bg-primary/10">
               <X className="h-5 w-5" />
             </Button>
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-0 flex flex-col max-h-[85vh]">
+        <CardContent className="p-0 flex flex-col flex-1 overflow-hidden bg-background/50">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full overflow-hidden">
               <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
                 {/* Banner Type Toggle */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 p-1 rounded-2xl bg-primary/5 border border-primary/10 w-fit">
-                  <button
-                    type="button"
-                    onClick={() => { setBannerType("upload"); setBannerUrlInput(""); }}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${bannerType === "upload" ? "bg-primary text-primary-foreground shadow-lg" : "text-muted-foreground hover:text-foreground"}`}
-                  >
-                    <Upload className="h-3.5 w-3.5" /> Upload Image
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setBannerType("url"); setPosterUrl(null); }}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${bannerType === "url" ? "bg-primary text-primary-foreground shadow-lg" : "text-muted-foreground hover:text-foreground"}`}
-                  >
-                    <LinkIcon className="h-3.5 w-3.5" /> Use URL
-                  </button>
-                </div>
-
-                {bannerType === "upload" ? (
-                  <div className="group relative h-48 w-full rounded-2xl border-2 border-dashed border-primary/20 bg-primary/5 flex flex-col items-center justify-center overflow-hidden transition-all hover:border-primary/50">
-                    {posterUrl ? (
-                      <>
-                        <img src={posterUrl} alt="Preview" className="h-full w-full object-cover" />
-                        <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-lg" onClick={() => setPosterUrl(null)}>
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </>
-                    ) : (
-                      <label className="flex flex-col items-center justify-center cursor-pointer space-y-2 w-full h-full">
-                        <div className="p-4 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-all">
-                          <ImagePlus className="h-8 w-8 text-primary" />
-                        </div>
-                        <p className="text-sm font-medium">Upload Event Poster</p>
-                        <p className="text-xs text-muted-foreground">JPG, PNG, WEBP (Max 5MB)</p>
-                        <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-                      </label>
-                    )}
-                    {isUploading && (
-                      <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
-                        <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></span>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="flex gap-3">
-                      <input
-                        type="url"
-                        value={bannerUrlInput}
-                        onChange={(e) => setBannerUrlInput(e.target.value)}
-                        placeholder="https://example.com/poster.jpg"
-                        className="flex-1 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-medium focus:border-primary focus:outline-none transition-all"
-                      />
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <FormLabel className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-primary/70">
+                      <ImagePlus className="h-4 w-4" /> Event Banner
+                    </FormLabel>
+                    <div className="flex items-center gap-1 p-1 rounded-full bg-primary/5 border border-primary/10">
+                      <button
+                        type="button"
+                        onClick={() => { setBannerType("upload"); setBannerUrlInput(""); }}
+                        className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${bannerType === "upload" ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-foreground"}`}
+                      >
+                        Upload
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setBannerType("url"); setPosterUrl(null); }}
+                        className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${bannerType === "url" ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-foreground"}`}
+                      >
+                        URL
+                      </button>
                     </div>
-                    {bannerUrlInput && (
-                      <div className="h-40 w-full rounded-2xl overflow-hidden border border-primary/10">
-                        <img src={bannerUrlInput} alt="URL Preview" className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                      </div>
-                    )}
                   </div>
-                )}
-              </div>
+
+                  {bannerType === "upload" ? (
+                    <div className="group relative h-40 w-full rounded-2xl border-2 border-dashed border-primary/20 bg-primary/5 flex flex-col items-center justify-center overflow-hidden transition-all hover:border-primary/50 hover:bg-primary/10">
+                      {posterUrl ? (
+                        <>
+                          <img src={posterUrl} alt="Preview" className="h-full w-full object-cover" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Button type="button" variant="destructive" size="icon" className="h-10 w-10 rounded-full shadow-xl" onClick={() => setPosterUrl(null)}>
+                              <X className="h-5 w-5" />
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center cursor-pointer space-y-2 w-full h-full">
+                          <div className="p-3 rounded-full bg-primary/10 group-hover:scale-110 transition-transform">
+                            <Upload className="h-6 w-6 text-primary" />
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm font-bold">Select Poster Image</p>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">JPG, PNG or WebP</p>
+                          </div>
+                          <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                        </label>
+                      )}
+                      {isUploading && (
+                        <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex flex-col items-center justify-center gap-2">
+                          <span className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></span>
+                          <span className="text-[10px] font-black uppercase tracking-tighter">Uploading...</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="relative">
+                        <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/50" />
+                        <input
+                          type="url"
+                          value={bannerUrlInput}
+                          onChange={(e) => setBannerUrlInput(e.target.value)}
+                          placeholder="Paste image URL here..."
+                          className="w-full rounded-2xl border border-primary/20 bg-primary/5 pl-11 pr-4 py-3 text-sm font-medium focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all"
+                        />
+                      </div>
+                      {bannerUrlInput && (
+                        <div className="h-32 w-full rounded-2xl overflow-hidden border border-primary/10 shadow-inner">
+                          <img src={bannerUrlInput} alt="URL Preview" className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
@@ -259,68 +271,63 @@ export const EventForm = ({ onSuccess, onCancel }: EventFormProps) => {
                   name="interests"
                   render={({ field }) => (
                     <FormItem className="space-y-4">
-                      <FormLabel className="flex items-center gap-2"><Trophy className="h-4 w-4 text-primary" /> Target Interests (AI Matching)</FormLabel>
+                      <FormLabel className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-primary/70">
+                        <Trophy className="h-4 w-4" /> Target Interests (AI Matching)
+                      </FormLabel>
                       <FormControl>
-                        <div className="space-y-3">
-                          <select
-                            multiple
-                            className="w-full rounded-2xl border border-primary/20 bg-primary/5 p-3 text-sm focus:border-primary focus:outline-none transition-all h-32 hidden"
-                            value={field.value}
-                            onChange={(e) => {
-                              const options = Array.from(e.target.selectedOptions, option => option.value);
-                              field.onChange(options);
-                            }}
-                          >
-                            {INTEREST_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                          </select>
-                          
-                          {/* Premium Multi-select UI */}
-                          <div className="relative group">
-                            <div className="flex flex-wrap gap-2 p-3 min-h-[56px] rounded-2xl border border-primary/10 bg-primary/5 transition-all group-hover:border-primary/30">
+                        <div className="space-y-4">
+                          <div className="flex flex-wrap gap-2 p-4 min-h-[64px] rounded-2xl border border-primary/10 bg-primary/5 shadow-inner">
+                            <AnimatePresence>
                               {field.value?.length > 0 ? (
                                 field.value.map((interest: string) => (
-                                  <span key={interest} className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest shadow-md">
+                                  <motion.span 
+                                    key={interest}
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.8 }}
+                                    className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20"
+                                  >
                                     {interest}
                                     <button 
                                       type="button" 
                                       onClick={() => field.onChange(field.value.filter((i: string) => i !== interest))}
-                                      className="hover:text-red-300 transition-colors"
+                                      className="hover:scale-125 transition-transform"
                                     >
                                       <X className="h-3 w-3" />
                                     </button>
-                                  </span>
+                                  </motion.span>
                                 ))
                               ) : (
-                                <span className="text-muted-foreground text-sm flex items-center px-2">Select event interest types...</span>
+                                <span className="text-muted-foreground/50 text-sm italic py-1">Choose topics that describe your event...</span>
                               )}
-                            </div>
-                            
-                            <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2 p-2 rounded-2xl border border-primary/5 bg-primary/5 max-h-[160px] overflow-y-auto">
-                              {INTEREST_OPTIONS.map((interest) => {
-                                const isSelected = field.value?.includes(interest);
-                                return (
-                                  <button
-                                    key={interest}
-                                    type="button"
-                                    onClick={() => {
-                                      const current = field.value || [];
-                                      const updated = isSelected
-                                        ? current.filter((i: string) => i !== interest)
-                                        : [...current, interest];
-                                      field.onChange(updated);
-                                    }}
-                                    className={`px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all text-left flex items-center justify-between ${
-                                      isSelected
-                                        ? "bg-primary/20 text-primary border border-primary/20"
-                                        : "hover:bg-primary/10 text-muted-foreground"
-                                    }`}
-                                  >
-                                    {interest}
-                                    {isSelected && <div className="h-1.5 w-1.5 rounded-full bg-primary" />}
-                                  </button>
-                                );
-                              })}
-                            </div>
+                            </AnimatePresence>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 h-48 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+                            {INTEREST_OPTIONS.map((interest) => {
+                              const isSelected = field.value?.includes(interest);
+                              return (
+                                <button
+                                  key={interest}
+                                  type="button"
+                                  onClick={() => {
+                                    const current = field.value || [];
+                                    const updated = isSelected
+                                      ? current.filter((i: string) => i !== interest)
+                                      : [...current, interest];
+                                    field.onChange(updated);
+                                  }}
+                                  className={`px-3 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all text-center flex flex-col items-center justify-center gap-2 border ${
+                                    isSelected
+                                      ? "bg-primary text-primary-foreground border-primary shadow-lg scale-95"
+                                      : "bg-primary/5 text-muted-foreground border-primary/5 hover:bg-primary/10 hover:border-primary/20"
+                                  }`}
+                                >
+                                  {interest}
+                                  {isSelected && <CheckCircle2 className="h-3 w-3" />}
+                                </button>
+                              );
+                            })}
                           </div>
                         </div>
                       </FormControl>
@@ -328,37 +335,46 @@ export const EventForm = ({ onSuccess, onCancel }: EventFormProps) => {
                     </FormItem>
                   )}
                 />
-            </div>
+              </div>
 
-            <div className="p-6 bg-primary/5 border-t border-primary/10">
-              {error && (
-                <div className="mb-4 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium">
-                  {error}
-                </div>
-              )}
-
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2 text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
-                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  AI-Ready Submission
-                </div>
-                <div className="flex gap-3">
-                  <Button type="button" variant="ghost" onClick={onCancel} className="rounded-full">Cancel</Button>
-                  <Button 
-                    type="submit" 
-                    disabled={isSubmitting || isUploading}
-                    className="rounded-full px-8 bg-accent hover:bg-accent/90 text-white shadow-xl min-w-[140px]"
+              <div className="p-6 bg-primary/5 border-t border-primary/10 shrink-0 backdrop-blur-md">
+                {error && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-4 p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-bold flex items-center gap-3"
                   >
-                    {isSubmitting ? (
-                      <span className="flex items-center gap-2">
-                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                        Creating...
-                      </span>
-                    ) : "Create Event"}
-                  </Button>
+                    <AlertTriangle className="h-4 w-4" />
+                    {error}
+                  </motion.div>
+                )}
+
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground uppercase tracking-widest font-black opacity-60">
+                    <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                    AI Optimized Submission
+                  </div>
+                  <div className="flex gap-4 w-full sm:w-auto">
+                    <Button type="button" variant="ghost" onClick={onCancel} className="flex-1 sm:flex-none rounded-full h-12 px-8 font-bold hover:bg-primary/10 transition-all">Cancel</Button>
+                    <Button 
+                      type="submit" 
+                      disabled={isSubmitting || isUploading}
+                      className="flex-1 sm:flex-none rounded-full h-12 px-10 bg-primary text-primary-foreground font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
+                    >
+                      {isSubmitting ? (
+                        <span className="flex items-center gap-3">
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
+                          Processing
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          Create Event <Trophy className="h-4 w-4 ml-2" />
+                        </span>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
           </form>
         </Form>
       </CardContent>
