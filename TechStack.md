@@ -1,7 +1,7 @@
 4. Tech Stack
 🌐 Frontend
-React.js
-Tailwind CSS
+React.js using vite
+Tailwind CSS ussing vite ( npm install tailwindcss @tailwindcss/vite)
 ShadCN UI
 Redux Toolkit
 ⚙️ Backend
