@@ -70,42 +70,64 @@ Beyond discovery, EventEase delivers a fully featured social hub with:
 
 | Login Page | Registration Page |
 |:---:|:---:|
-| <img src="docs/screenshots/05_login_page.png" width="480" alt="Login Page" /> | <img src="docs/screenshots/02_register_page.png" width="480" alt="Register Page" /> |
-| *Clean auth form with credential validation* | *Role-based registration — Student or Organizer* |
+| <img src="docs/screenshots/ss_01_login.png" width="480" alt="Login Page" /> | <img src="docs/screenshots/ss_02_register.png" width="480" alt="Register Page" /> |
+| *Clean auth form with EventEase branding and green CTA* | *Role-based registration — Student or Organizer* |
 
 ---
 
-### 🔍 Event Discovery
+### 🏠 Home / Discovery
 
-| Unauthenticated Discovery | Authenticated Discovery |
+| Discovery Hero — Search & Categories | Event Cards Grid |
 |:---:|:---:|
-| <img src="docs/screenshots/01_discovery_unauthenticated.png" width="480" alt="Discovery Unauthenticated" /> | <img src="docs/screenshots/04_discovery_authenticated.png" width="480" alt="Discovery Authenticated" /> |
-| *Public event browsing without account* | *Personalized AI-powered event feed for logged-in users* |
+| <img src="docs/screenshots/ss_05_discovery.png" width="480" alt="Discovery Hero" /> | <img src="docs/screenshots/ss_06_discovery_cards.png" width="480" alt="Event Cards" /> |
+| *Explore the Pulse — AI-powered event search with category filters* | *Live event grid — club badge, date, capacity per card* |
 
-| Discovery with Live Events | Navigation Bar |
-|:---:|:---:|
-| <img src="docs/screenshots/07_discovery_with_events.png" width="480" alt="Discovery with Events" /> | <img src="docs/screenshots/09_navbar_authenticated.png" width="480" alt="Navbar Authenticated" /> |
-| *Real event cards with registration, capacity, and interest tags* | *Role-aware navbar — shows Organizer panel for event creators* |
+---
+
+### 📅 Event Details
+
+| Event Detail — AI Insight Engine |
+|:---:|
+| <img src="docs/screenshots/ss_12_event_detail.png" width="960" alt="Event Detail" /> |
+| *AI Insight Engine (73% Sync score), Info/Discussion/Updates tabs, Secure My Spot CTA, organizer info panel* |
 
 ---
 
 ### 🎓 Student Dashboard
 
-| Student Dashboard | Student Dashboard (Personalized) |
-|:---:|:---:|
-| <img src="docs/screenshots/08_dashboard.png" width="480" alt="Dashboard" /> | <img src="docs/screenshots/11_dashboard_student.png" width="480" alt="Student Dashboard" /> |
-| *Registered events, AI recommendations, and engagement overview* | *Personalized feed — "Top Recommended For You"* |
+| Personalized Dashboard |
+|:---:|
+| <img src="docs/screenshots/ss_07_dashboard.png" width="960" alt="Student Dashboard" /> |
+| *Welcome banner, Interest Profile radar chart, Trending Categories bar chart, Your Schedule & AI Alignment Tip* |
 
 ---
 
 ### 🛠️ Organizer Command Center
 
-| Organizer Control Panel |
-|:---:|
-| <img src="docs/screenshots/10_organizer_view.png" width="960" alt="Organizer Dashboard" /> |
-| *Full event management: Create, monitor registrations, manage attendees, and **Close Events** to mark completion* |
+| Organizer Dashboard | Event Card — Hover Actions |
+|:---:|:---:|
+| <img src="docs/screenshots/ss_08_organizer_dashboard.png" width="480" alt="Organizer Dashboard" /> | <img src="docs/screenshots/ss_09_organizer_card_hover.png" width="480" alt="Organizer Card Hover" /> |
+| *Full event management panel with event cards* | *Hover reveals quick-action icons (Edit, Close, Delete)* |
 
-> 💡 **New Feature:** The organizer dashboard includes a **"Close Event"** button on each active event card. Clicking it opens a confirmation dialog and calls `PATCH /api/events/:id/close`, updating the event status to `completed` in real time.
+> 💡 **Close Event Feature:** Each active event card shows a **"Close Event"** button. Clicking it triggers a confirmation dialog → calls `PATCH /api/events/:id/close` → updates status to `completed` with optimistic UI update.
+
+---
+
+### 💬 Real-Time Chat
+
+| Chat — Campus Circle |
+|:---:|
+| <img src="docs/screenshots/ss_11_chat.png" width="960" alt="Chat Page" /> |
+| *Socket.IO-powered messaging — sidebar channel list, search conversations, event discussion rooms* |
+
+---
+
+### 👤 User Profile
+
+| Profile Page |
+|:---:|
+| <img src="docs/screenshots/ss_10_profile.png" width="960" alt="Profile Page" /> |
+| *Social profile with follow stats, interest tags, posted events, and account management options* |
 
 ---
 
