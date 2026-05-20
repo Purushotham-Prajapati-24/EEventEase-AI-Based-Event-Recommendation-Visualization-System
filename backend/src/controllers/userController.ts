@@ -1,19 +1,19 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 import User from "../models/User";
 import Event from "../models/Event";
 import Notification from "../models/Notification";
 
-export const getUsers = async (req: Request, res: Response) => {
+export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const users = await User.find().select("-passwordHash");
     res.status(200).json(users);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch users", error });
+    next(error);
   }
 };
 
-export const getUserById = async (req: Request, res: Response) => {
+export const getUserById = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     if (typeof id !== 'string' || !mongoose.Types.ObjectId.isValid(id)) {
@@ -29,33 +29,60 @@ export const getUserById = async (req: Request, res: Response) => {
     res.status(200).json(user);
   } catch (error: any) {
     console.error("Error in getUserById:", error);
-    res.status(500).json({ 
-      message: "Failed to fetch user", 
-      error: error.message || "Internal Server Error" 
-    });
+    next(error);
   }
 };
 
-export const createUser = async (req: Request, res: Response) => {
+export const createUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const newUser = new User(req.body);
     const savedUser = await newUser.save();
     // In a real app, hash password before saving and generate JWT token
     res.status(201).json(savedUser);
   } catch (error) {
-    res.status(500).json({ message: "Failed to create user", error });
-  }
-};
-export const updateProfile = async (req: Request, res: Response) => {
-  try {
-    const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, { new: true }).select("-passwordHash");
-    res.status(200).json(updatedUser);
-  } catch (error) {
-    res.status(500).json({ message: "Failed to update profile", error });
+    next(error);
   }
 };
 
-export const followUser = async (req: any, res: Response) => {
+export const updateProfile = async (req: any, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const currentUserId = req.user._id.toString();
+    const currentUserRole = req.user.role;
+
+    // Enforce ownership check to prevent BOLA/IDOR
+    if (currentUserId !== id && currentUserRole !== "admin") {
+      return res.status(403).json({ message: "Not authorized to update this profile" });
+    }
+
+    // Whitelist allowed fields to prevent mass assignment vulnerability
+    const allowedFields = ["name", "profileImage", "bio", "interests"];
+    const updateData: Record<string, any> = {};
+
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) {
+        updateData[key] = req.body[key];
+      }
+    }
+
+    // Explicitly prevent password hashing bypass, role privilege escalation, or relationship tampering
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    ).select("-passwordHash");
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const followUser = async (req: any, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const currentUserId = req.user.id;
@@ -85,11 +112,11 @@ export const followUser = async (req: any, res: Response) => {
 
     res.status(200).json({ message: "Followed successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Failed to follow user", error });
+    next(error);
   }
 };
 
-export const unfollowUser = async (req: any, res: Response) => {
+export const unfollowUser = async (req: any, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const currentUserId = req.user.id;
@@ -99,11 +126,11 @@ export const unfollowUser = async (req: any, res: Response) => {
 
     res.status(200).json({ message: "Unfollowed successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Failed to unfollow user", error });
+    next(error);
   }
 };
 
-export const getSuggestedUsers = async (req: any, res: Response) => {
+export const getSuggestedUsers = async (req: any, res: Response, next: NextFunction) => {
   try {
     const currentUser = await User.findById(req.user._id).select("interests following");
     if (!currentUser || !currentUser.interests?.length) {
@@ -119,11 +146,11 @@ export const getSuggestedUsers = async (req: any, res: Response) => {
 
     res.status(200).json(suggestions);
   } catch (error) {
-    res.status(500).json({ message: "Failed to get suggestions", error });
+    next(error);
   }
 };
 
-export const getUserConnections = async (req: Request, res: Response) => {
+export const getUserConnections = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     if (typeof id !== 'string' || !mongoose.Types.ObjectId.isValid(id)) {
@@ -146,11 +173,11 @@ export const getUserConnections = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Error in getUserConnections:", error);
-    res.status(500).json({ message: "Failed to fetch connections", error });
+    next(error);
   }
 };
 
-export const deleteUser = async (req: any, res: Response) => {
+export const deleteUser = async (req: any, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     
@@ -177,6 +204,6 @@ export const deleteUser = async (req: any, res: Response) => {
 
     res.status(200).json({ message: "Account successfully deactivated" });
   } catch (error) {
-    res.status(500).json({ message: "Failed to deactivate account", error });
+    next(error);
   }
 };

@@ -13,13 +13,14 @@ import {
 } from "recharts";
 import { Activity, TrendingUp, Calendar, Zap, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
+import { DashboardSkeleton } from "@/components/ui/PageSkeletons";
 
 export const Dashboard = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { recommendations, isLoading } = useSelector((state: RootState) => state.recommendations);
-  const { events } = useSelector((state: RootState) => state.events);
+  const { recommendations, isLoading: isRecsLoading } = useSelector((state: RootState) => state.recommendations);
+  const { events, isLoading: isEventsLoading } = useSelector((state: RootState) => state.events);
   const registeredEvents = useMemo(() => {
     return events.filter(e => e.registeredAttendees?.some((a: any) => 
       (typeof a === 'string' ? a === user?._id : a._id === user?._id)
@@ -84,6 +85,7 @@ export const Dashboard = () => {
   };
 
   if (!user) return null;
+  if (isRecsLoading || isEventsLoading) return <DashboardSkeleton />;
 
   return (
     <div className="p-8 space-y-8 bg-background min-h-screen">
@@ -235,7 +237,7 @@ export const Dashboard = () => {
           AI <span className="text-primary">Spotlight</span>
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isLoading ? (
+          {isRecsLoading ? (
             <div className="col-span-full py-20 text-center glass rounded-3xl border-dashed border-2 border-primary/20">
               <div className="flex flex-col items-center gap-4">
                 <div className="h-12 w-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>

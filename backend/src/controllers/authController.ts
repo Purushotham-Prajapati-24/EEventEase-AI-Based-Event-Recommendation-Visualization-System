@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User";
@@ -24,7 +24,7 @@ const setRefreshTokenCookie = (res: Response, token: string) => {
   });
 };
 
-export const registerUser = async (req: Request, res: Response) => {
+export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { name, email, password, role, interests } = req.body;
 
@@ -61,11 +61,11 @@ export const registerUser = async (req: Request, res: Response) => {
       res.status(400).json({ message: "Invalid user data" });
     }
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    next(error);
   }
 };
 
-export const loginUser = async (req: Request, res: Response) => {
+export const loginUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = req.body;
 
@@ -88,11 +88,11 @@ export const loginUser = async (req: Request, res: Response) => {
       res.status(401).json({ message: "Invalid email or password" });
     }
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    next(error);
   }
 };
 
-export const refreshToken = async (req: Request, res: Response) => {
+export const refreshToken = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const token = req.cookies.refreshToken;
     if (!token) return res.status(401).json({ message: "No refresh token" });
@@ -105,11 +105,11 @@ export const refreshToken = async (req: Request, res: Response) => {
     const accessToken = generateAccessToken(String(user._id));
     res.json({ token: accessToken });
   } catch (error) {
-    res.status(401).json({ message: "Token refresh failed", error });
+    next(error);
   }
 };
 
-export const logoutUser = async (req: Request, res: Response) => {
+export const logoutUser = async (req: Request, res: Response, next: NextFunction) => {
   res.cookie("refreshToken", "", {
     httpOnly: true,
     expires: new Date(0),

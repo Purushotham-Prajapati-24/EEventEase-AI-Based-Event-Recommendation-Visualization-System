@@ -21,6 +21,7 @@ import {
   Activity
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ProfileSkeleton } from "../components/ui/PageSkeletons";
 import { DotPattern } from "../components/ui/dot-pattern-1";
 import { ProfileEditModal } from "../components/ProfileEditModal";
 import { ConnectionsModal } from "../components/ConnectionsModal";
@@ -69,11 +70,7 @@ const Profile = () => {
   }, [isOwnProfile, currentUser?._id]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   if (error) {

@@ -9,6 +9,7 @@ import type { EventData } from "@/types";
 import { AlertCard } from "@/components/ui/alert-card";
 import { CheckCircle2, AlertTriangle, TrendingUp, Activity, BarChart3 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { OrganizerDashboardSkeleton } from "@/components/ui/PageSkeletons";
 import { 
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, 
   CartesianGrid, Cell
@@ -170,6 +171,10 @@ export const OrganizerDashboard = () => {
   };
 
   const COLORS = ['#7C3AED', '#F97316', '#10B981', '#3B82F6', '#EF4444', '#F59E0B'];
+
+  if (loading) {
+    return <OrganizerDashboardSkeleton />;
+  }
 
   return (
     <div className="p-8 space-y-8 bg-background min-h-screen">

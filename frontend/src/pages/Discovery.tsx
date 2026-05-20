@@ -10,6 +10,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Target, Filter, ChevronRight, Hash, Search, Grid, List, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { DiscoverySkeleton } from "@/components/ui/PageSkeletons";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -24,8 +25,8 @@ export const Discovery = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { events } = useSelector((state: RootState) => state.events);
-  const { recommendations } = useSelector((state: RootState) => state.recommendations);
+  const { events, isLoading: isEventsLoading } = useSelector((state: RootState) => state.events);
+  const { recommendations, isLoading: isRecsLoading } = useSelector((state: RootState) => state.recommendations);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -81,6 +82,10 @@ export const Discovery = () => {
       };
     }
   }, [filteredRecommendations]);
+
+  if (isEventsLoading || (user && isRecsLoading)) {
+    return <DiscoverySkeleton />;
+  }
 
   return (
     <div className="bg-background min-h-screen selection:bg-primary/30">

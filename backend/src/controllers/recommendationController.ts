@@ -1,11 +1,19 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import Event from "../models/Event";
 import User from "../models/User";
 import { generateEventRecommendations } from "../services/aiService";
 
-export const getPersonalizedRecommendations = async (req: Request, res: Response) => {
+export const getPersonalizedRecommendations = async (req: any, res: Response, next: NextFunction) => {
   try {
     const userId = req.params.userId;
+    const currentUserId = req.user._id.toString();
+    const currentUserRole = req.user.role;
+
+    // Enforce ownership check to prevent BOLA/IDOR
+    if (currentUserId !== userId && currentUserRole !== "admin") {
+      return res.status(403).json({ message: "Not authorized to access these recommendations" });
+    }
+
     const user = await User.findById(userId);
     
     if (!user) {
@@ -54,6 +62,6 @@ export const getPersonalizedRecommendations = async (req: Request, res: Response
 
     res.status(200).json(recommendations);
   } catch (error) {
-    res.status(500).json({ message: "Failed to generate recommendations", error });
+    next(error);
   }
 };

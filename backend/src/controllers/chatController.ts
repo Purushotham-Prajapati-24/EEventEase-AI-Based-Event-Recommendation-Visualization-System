@@ -1,9 +1,9 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import Chat from "../models/Chat";
 import Message from "../models/Message";
 import User from "../models/User";
 
-export const accessChat = async (req: any, res: Response) => {
+export const accessChat = async (req: any, res: Response, next: NextFunction) => {
   const { userId } = req.body;
 
   if (!userId) {
@@ -56,12 +56,12 @@ export const accessChat = async (req: any, res: Response) => {
       );
       res.status(200).json(fullChat);
     } catch (error) {
-      res.status(400).json({ message: "Failed to create chat", error });
+      next(error);
     }
   }
 };
 
-export const fetchChats = async (req: any, res: Response) => {
+export const fetchChats = async (req: any, res: Response, next: NextFunction) => {
   try {
     Chat.find({ participants: { $elemMatch: { $eq: req.user.id } } })
       .populate("participants", "-passwordHash")
@@ -76,22 +76,35 @@ export const fetchChats = async (req: any, res: Response) => {
         res.status(200).send(results);
       });
   } catch (error) {
-    res.status(400).json({ message: "Failed to fetch chats", error });
+    next(error);
   }
 };
 
-export const fetchMessages = async (req: Request, res: Response) => {
+export const fetchMessages = async (req: any, res: Response, next: NextFunction) => {
   try {
+    const chat = await Chat.findById(req.params.chatId);
+    if (!chat) {
+      return res.status(404).json({ message: "Chat not found" });
+    }
+    
+    // Enforce BOLA authorization check: user must be a participant of the chat room
+    const isParticipant = chat.participants.some(
+      (pId) => pId.toString() === req.user._id.toString()
+    );
+    if (!isParticipant) {
+      return res.status(403).json({ message: "Not authorized to access messages in this chat" });
+    }
+
     const messages = await Message.find({ chat: req.params.chatId })
       .populate("sender", "name profileImage email")
       .populate("chat");
     res.json(messages);
   } catch (error) {
-    res.status(400).json({ message: "Failed to fetch messages", error });
+    next(error);
   }
 };
 
-export const getChatById = async (req: Request, res: Response) => {
+export const getChatById = async (req: any, res: Response, next: NextFunction) => {
   try {
     const chat = await Chat.findById(req.params.chatId)
       .populate("participants", "-passwordHash")
@@ -102,6 +115,14 @@ export const getChatById = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Chat not found" });
     }
 
+    // Enforce BOLA authorization check: user must be a participant of the chat room
+    const isParticipant = chat.participants.some(
+      (p: any) => p._id.toString() === req.user._id.toString()
+    );
+    if (!isParticipant) {
+      return res.status(403).json({ message: "Not authorized to access this chat room" });
+    }
+
     const fullChat = await User.populate(chat, {
       path: "lastMessage.sender",
       select: "name profileImage email",
@@ -109,6 +130,6 @@ export const getChatById = async (req: Request, res: Response) => {
 
     res.status(200).json(fullChat);
   } catch (error) {
-    res.status(400).json({ message: "Failed to get chat", error });
+    next(error);
   }
 };

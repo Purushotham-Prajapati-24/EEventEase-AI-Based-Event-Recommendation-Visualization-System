@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { io, Socket } from "socket.io-client";
+import { ChatSkeleton } from "../components/ui/PageSkeletons";
+import { Skeleton } from "../components/ui/skeleton";
 
 const Chat = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -174,6 +176,8 @@ const Chat = () => {
     return adminId && userId && adminId === userId;
   };
 
+  if (loading) return <ChatSkeleton />;
+
   return (
     <div className="h-screen bg-background pt-20 flex overflow-hidden">
       {/* Chat Sidebar */}
@@ -281,7 +285,20 @@ const Chat = () => {
               {/* Messages Feed */}
               <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar flex flex-col">
                 {messagesLoading ? (
-                  <div className="flex-1 flex items-center justify-center text-xs font-black uppercase tracking-widest opacity-20 animate-pulse">Syncing Messages...</div>
+                  <div className="space-y-6">
+                    {[1, 2, 3, 4].map((i) => {
+                      const isLeft = i % 2 === 0;
+                      return (
+                        <div key={i} className={`flex items-end gap-2.5 ${isLeft ? "justify-start" : "justify-end"}`}>
+                          {isLeft && <Skeleton className="h-8 w-8 rounded-full shrink-0" />}
+                          <div className={`space-y-1.5 p-3.5 rounded-2xl max-w-sm ${isLeft ? "bg-slate-100 dark:bg-slate-800 rounded-bl-none" : "bg-primary/10 rounded-br-none"}`}>
+                            <Skeleton className={`h-4 ${isLeft ? "w-48" : "w-36"} rounded-sm`} />
+                            {i === 2 && <Skeleton className="h-4 w-32 rounded-sm" />}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 ) : messages.map((msg: any, idx: number) => {
                   const isMe = msg.sender?._id === user?._id;
                   const showAvatar = idx === 0 || messages[idx-1].sender?._id !== msg.sender?._id;

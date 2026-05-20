@@ -57,6 +57,10 @@ app.get("/", (req, res) => {
   res.send("EventEase API is running...");
 });
 
+// Error handling middleware
+import { errorHandler } from "./middleware/errorMiddleware";
+app.use(errorHandler);
+
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

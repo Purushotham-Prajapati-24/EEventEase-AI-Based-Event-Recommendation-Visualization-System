@@ -1,7 +1,7 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import Notification from "../models/Notification";
 
-export const getNotifications = async (req: Request, res: Response) => {
+export const getNotifications = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = (req as any).user.id;
     console.log("Fetching notifications for user:", userId);
@@ -14,11 +14,11 @@ export const getNotifications = async (req: Request, res: Response) => {
     res.status(200).json(notifications);
   } catch (error) {
     console.error("Error in getNotifications:", error);
-    res.status(500).json({ message: "Failed to fetch notifications", error });
+    next(error);
   }
 };
 
-export const createInvite = async (req: Request, res: Response) => {
+export const createInvite = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { recipientId, message, eventId } = req.body;
     const notification = await Notification.create({
@@ -30,15 +30,15 @@ export const createInvite = async (req: Request, res: Response) => {
     });
     res.status(201).json(notification);
   } catch (error) {
-    res.status(500).json({ message: "Failed to send invite", error });
+    next(error);
   }
 };
 
-export const markAsRead = async (req: Request, res: Response) => {
+export const markAsRead = async (req: Request, res: Response, next: NextFunction) => {
   try {
     await Notification.findByIdAndUpdate(req.params.id, { isRead: true });
     res.status(200).json({ message: "Notification marked as read" });
   } catch (error) {
-    res.status(500).json({ message: "Failed to update notification", error });
+    next(error);
   }
 };
